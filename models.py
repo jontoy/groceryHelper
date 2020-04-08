@@ -1,5 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
 
+bcrypt = Bcrypt()
 db = SQLAlchemy()
 def connect_db(app):
     db.app = app
@@ -18,10 +20,20 @@ class Recipe(db.Model):
 
     id = db.Column(db.Integer, primary_key = True, autoincrement = True)
     title = db.Column(db.Text, nullable=False)
+    category = db.Column(db.Text)
     prep_time = db.Column(db.Integer, nullable=True)
     difficulty = db.Column(db.Integer, nullable=True)
     spice_level = db.Column(db.Integer, nullable=True)
-    steps = db.relationship('Step', backref='recipe', lazy=True, passive_deletes=True)
+    image = db.Column(db.Text)
+    steps = db.relationship('Step', backref='recipe', passive_deletes=True)
+    
+    def serialize(self):
+        return {"id":self.id, 
+        "title":self.title, 
+        "category":self.category,
+        "prep_time":self.prep_time,
+        "difficulty":self.difficulty,
+        "spice_level":self.spice_level}
 
 class Ingredient(db.Model):
 
@@ -34,6 +46,12 @@ class Ingredient(db.Model):
     unit = db.Column(db.Text, nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     recipes = db.relationship('Recipe', secondary="recipes_ingredients", backref='ingredients')
+
+    def serialize(self):
+        return {"id":self.id, 
+        "food_name":self.food_name, 
+        "unit":self.unit,
+        "category_id":self.category_id}
 
 class Category(db.Model):
     __tablename__ = 'categories'
@@ -48,3 +66,71 @@ class Step(db.Model):
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id', ondelete='CASCADE'), nullable=False)
     step_number = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text, nullable=False)
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.Text, nullable=False, unique=True)
+    email = db.Column(db.Text, nullable=False, unique=True)
+    password = db.Column(db.Text, nullable=False)
+    carts = db.relationship('Cart', passive_deletes=True, lazy='joined')
+
+    def serialize(self):
+        return {"id":self.id, 
+        "username":self.username, 
+        "email":self.email}
+
+    @classmethod
+    def signup(cls, username, email, password):
+        """Sign up user.
+        Hashes password and adds user to system.
+        """
+
+        hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
+
+        user = User(
+            username=username,
+            email=email,
+            password=hashed_pwd
+        )
+
+        db.session.add(user)
+        return user
+
+    @classmethod
+    def authenticate(cls, username, password):
+        """Find user with `username` and `password`.
+
+        This is a class method (call it on the class, not an individual user.)
+        It searches for a user whose password hash matches this password
+        and, if it finds such a user, returns that user object.
+
+        If can't find matching user (or if password is wrong), returns False.
+        """
+
+        user = cls.query.filter_by(username=username).first()
+
+        if user:
+            is_auth = bcrypt.check_password_hash(user.password, password)
+            if is_auth:
+                return user
+
+        return False
+
+class Cart(db.Model):
+    __tablename__ = 'carts'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.Text, nullable=False, default='Untitled Cart')
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    user = db.relationship('User')
+
+    def serialize(self):
+        return {"id":self.id, "name":self.name, "user_id": self.user_id}
+
+class RecipeCart(db.Model):
+    __tablename__ = 'recipes_carts'
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id', ondelete='CASCADE'), primary_key=True, nullable=False)
+    cart_id = db.Column(db.Integer, db.ForeignKey('carts.id', ondelete='CASCADE'), primary_key=True, nullable=False)
+    quantity = db.Column(db.Numeric, nullable = False)

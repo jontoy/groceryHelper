@@ -1,0 +1,71 @@
+{% from 'macros.html' import render_difficulty, render_spice_level, create_select_option, create_radio_option %}
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Recipes</h1>
+<div class="row">
+    <div class="col-10">
+        <div class="col-8">
+            {% if g.cart %}
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{g.cart.name}}</h5>
+                    <p class="card-text">
+                        <ul class="list-group">
+                            {% for qty, recipe in curr_cart_recipes %}
+                            <li class="list-group-item">
+                                <form class="cart-form" action="/carts/recipe/{{recipe.id}}/edit" method="POST">
+                                    <a href="/recipes/{{recipe.id}}">{{recipe.title}}</a> 
+                                    X 
+                                    <input type="number" name="quantity" id="quantity" min="1" max="5" value="{{qty}}">
+                                    <button class="btn btn-sm btn-outline-secondary">Update</button>
+                                </form>
+                                <form class="cart-form" action="/carts/recipe/{{recipe.id}}/delete" method="POST">
+                                    <button class="btn btn-sm btn-outline-danger">Remove</button>
+                                </form>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <a class="btn btn-success" href="/checkout">Generate Your List!</a>
+                        <form class="cart-form" action="/carts/{{g.cart.id}}/delete" method="POST">
+                            <button class="btn btn-danger">Delete Cart</button>
+                        </form>
+                    </p>
+                </div>
+            </div>
+            {% else %}
+            <h3>No Active Cart</h3>
+            {% endif %}
+        </div>
+        <div class="col-8">
+            <a class="btn btn-sm btn-outline-primary" href="/carts/new">Create new cart!</a>
+        </div>
+    </div>
+    
+    <div class="col-10">
+        <div class="row">
+            {% for cart in carts %}
+                {% if cart.id != g.cart.id %}
+                <div class="col-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{cart.name}}</h5>
+                            <p class="card-text">
+                                filler text
+                            </p>
+                            <form action="/carts/{{cart.id}}/activate" method="POST">
+                                <button class="btn btn-info">Activate Cart</button>
+                            </form>
+                            <form action="/carts/{{cart.id}}/delete" method="POST">
+                                <button class="btn btn-danger">Delete Cart</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

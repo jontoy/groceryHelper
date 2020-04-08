@@ -7,8 +7,11 @@ from models import db, connect_db, Recipe, Ingredient, Category, RecipeIngredien
 import requests
 import time
 import re
+import os
 import json
 from decimal import Decimal
+import hashlib
+from PIL import Image
 
 test_app = Flask('test_app')
 test_app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///recipe'
@@ -16,16 +19,37 @@ test_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 test_app.config['SQLALCHEMY_ECHO'] = True
 
 connect_db(test_app)
-# db.drop_all()
 db.create_all()
 
+def persist_image(folder_path:str,url:str):
+    try:
+        image_content = requests.get(url).content
+
+    except Exception as e:
+        print(f"ERROR - Could not download {url} - {e}")
+
+    try:
+        import io
+        image_file = io.BytesIO(image_content)
+        image = Image.open(image_file).convert('RGB')
+        file_name = hashlib.sha1(image_content).hexdigest()[:10]
+        file_path = os.path.join(folder_path, file_name + '.jpg')
+        with open(file_path, 'wb') as f:
+            image.save(f, "JPEG", quality=85)
+        print(f"SUCCESS - saved {url} - as {file_path}")
+        return file_name
+    except Exception as e:
+        print(f"ERROR - Could not save {url} - {e}")
+        return None
+
 class RecipeParser():
-    def __init__(self, homeChefUrl=None):
+    def __init__(self, homeChefUrl=None, category=None):
         if homeChefUrl:
-            self.set_url(homeChefUrl)
-    def set_url(self, homeChefUrl):
+            self.set_url(homeChefUrl, category)
+    def set_url(self, homeChefUrl, category=None):
         res = requests.get(homeChefUrl)
         self.soup = BeautifulSoup(res.text, features='html.parser')
+        self.category = category
     def parseRecipe(self):
         self._extract_difficulty()
         self._extract_ingredients()
@@ -70,9 +94,11 @@ class RecipeParser():
     def _extract_total_time(self):
         total_time = self.soup.find(itemprop='totalTime').get('content').strip().replace('PT', '').replace('M', '')
         self.total_time = total_time
-
+    def _extract_image_url(self):
+        self.image_url = self.soup.find(class_='meal__imageCarousel').find('img')['data-srcset'].split(', ')[-1].split(' ')[0]
     def _commit_recipe(self):
-        new_recipe = Recipe(title=self.title, prep_time=self.total_time, difficulty=self.difficulty, spice_level=self.spice)                          
+        file_name = persist_image('static/images', myParser.image_url)
+        new_recipe = Recipe(title=self.title, prep_time=self.total_time, difficulty=self.difficulty, spice_level=self.spice, category=self.category, image=file_name)                          
         db.session.add(new_recipe)
         db.session.commit()
         self.new_recipe_id = new_recipe.id 
@@ -134,26 +160,29 @@ class RecipeParser():
             self.ingredients_parsed.append({'food_name': food_name, 'quantity':quantity, 'unit': unit, 'food_category':food_category})
             time.sleep(8)
 
+
+
 def collect_meal_urls(base_url, category, max_pages, url_list=[]):
-    base_category_url = base_url + category
+    base_category_url = f'{base_url}/recipes/{category}'
     for i in range(1,max_pages+1):
         res = requests.get(base_category_url, params={'page':i})
         soup = BeautifulSoup(res.text, features='html.parser')
         for link in soup.find_all('a'): 
             if '/meals' in link.get('href'): 
-                url_list.append(link.get('href'))
+                url_list.append((base_url + link.get('href'), category))
 def save_all_meal_urls():
     url_list = []
-    base_url = 'https://www.homechef.com/recipes/'
+    base_url = 'https://www.homechef.com'
     categories = [('poultry',8), ('seafood', 5), ('pork', 4), ('beef', 3), ('vegetarian', 11)]
     for category, max_pages in categories:
         collect_meal_urls(base_url=base_url, category=category, max_pages=max_pages, url_list=url_list)
-    url_list_full = ['https://www.homechef.com'+url for url in list(set(url_list))]
-    import simplejson
-    f = open('urls.txt', 'w')                                                     
-    json.dump(url_list_full, f)                                             
-    f.close() 
+    url_list = sorted(url_list, key=lambda tup: tup[0])
+    with open('urls.txt', 'w') as f:
+        json.dump(url_list, f, indent=4)
 
+
+
+# save_all_meal_urls()
 with open('urls.txt', 'r') as f:
     url_list = json.loads(f.read())
 with open('visited_urls.txt', 'r') as f:
@@ -161,8 +190,8 @@ with open('visited_urls.txt', 'r') as f:
 with open('unparseable_urls.txt', 'r') as f:
     unparseable_urls = json.loads(f.read())
 
-# myParser = RecipeParser()
-# for target_url in url_list:
+myParser = RecipeParser()
+# for target_url, category in url_list:
 #     print(target_url)
 #     print('unvisited?')
 #     print((target_url not in visited_urls) and (target_url not in unparseable_urls))
@@ -174,28 +203,33 @@ with open('unparseable_urls.txt', 'r') as f:
 #             print('finished parsing')
 #             myParser.commit_parsed_data()
 #             print('finished committing')
-#             visited_urls.append(target_url)
+#             visited_urls.append((target_url, category))
 #             with open('visited_urls.txt', 'w') as f:
 #                 json.dump(visited_urls, f, indent=4)
 #         except LookupError as e:
 #             print('ABORTING PARSE')
-#             unparseable_urls.append(target_url)
+#             unparseable_urls.append((target_url, category))
 #             with open('unparseable_urls.txt', 'w') as f:
 #                 json.dump(unparseable_urls, f, indent=4)
 #             time.sleep(8)
 #             continue
 
-# target_url = 'https://www.homechef.com/meals/brown-butter-shrimp'
-# # target_url = 'https://www.homechef.com/meals/pork-shumai-meatballs'
-# myParser = RecipeParser(target_url)
-# myParser.parseRecipe()
-# myParser.parse_ingredients()
-# print(myParser.title)
-# print(myParser.difficulty)
-# print(myParser.spice)
-# print(myParser.total_time)
-# print(myParser.ingredients)
-# print(myParser.ingredients_parsed)
-# myParser.commit_parsed_data()
 
 
+
+# for target_url, category in visited_urls:
+#     print(target_url)
+#      if (target_url not in visited_urls) and (target_url not in unparseable_urls):
+#         try:
+#             myParser.set_url(target_url)
+#             myParser._extract_image_url()
+#             myParser._extract_title()
+#             target_recipe = Recipe.query.filter_by(title=myParser.title).first()
+#             file_name = persist_image('static/images', myParser.image_url)
+#             target_recipe.image = file_name
+#             db.session.add(target_recipe)
+#             db.session.commit()
+#         except LookupError as e:
+#             print('ABORTING PARSE')
+
+#             continue

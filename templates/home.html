@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Home Page!</h1>
+<a href={{ url_for('index_recipes') }}>View our recipes!</a>
+<a href="{{ url_for('index_carts') }}">View your carts</a>
+{% endblock %}

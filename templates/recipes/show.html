@@ -1,0 +1,34 @@
+{% from 'macros.html' import render_difficulty, render_spice_level %}
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Recipe: {{recipe.id}}</h1>
+<div class="card">
+    <img class="card-img-top" src="/static/images/{{recipe.image}}.jpg" alt="Recipe Image">
+    <div class="card-body">
+        <h5 class="card-title">{{recipe.title}}</h5>
+        <p class="card-text">
+            <p>Protein: {{recipe.category}}</p>
+            <p>Total Prep Time: {{recipe.prep_time}} mins</p>
+            <p>Difficulty: {{render_difficulty(recipe.difficulty)}}</p>
+            <p>Spice Level: {{render_spice_level(recipe.spice_level)}}</p>
+        </p>
+        <a href="/recipes/{{recipe.id}}" class="btn btn-primary">View Recipe</a>
+    </div>
+</div>
+<ul>
+    {% for qty, unit, name in ingredients %}
+    <li>{{qty}} {{unit}} {{name}}</li>
+    {% endfor %}
+</ul>
+<div>
+    <h3>Steps:</h3>
+    {% for step in steps %}
+    <p>{{step.description}}</p>
+    {% endfor %}
+</div>
+{% endblock %}
+
+static/images/f3967fcac1.jpg
+
+static/images/f3967fcac1.jpg

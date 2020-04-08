@@ -1,0 +1,69 @@
+{% from 'macros.html' import render_difficulty, render_spice_level, create_select_option, create_radio_option %}
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Recipes</h1>
+<div class="row">
+    <div class="col-2">
+        <form>
+            <hr>
+            <div class="form-group">
+                <label><b>Protein</b></label>
+                <!-- <label for="category">Protein Category</label>
+                <select class="form-control" name="category" id="category" value="{{category}}">
+                  <option value="">--Narrow by Protein--</option> -->
+                  {% for val, name in [('', 'Any'), ('beef', 'Beef'), ('pork', 'Pork'), ('poultry', 'Poultry'), ('seafood', 'Seafood'), ('vegetarian', 'Vegetarian')] %}
+                  {{create_radio_option(val, category, 'category', name)}}
+                  {% endfor %}
+                <!-- </select> -->
+              </div>
+            <hr>
+            <div class="form-group">
+              <label><b>Difficulty</b></label>
+                {% for val, name in [('', 'Any'), ('1', 'Easy'), ('2', 'Medium'), ('3', 'Hard')] %}
+                {{create_radio_option(val, difficulty, 'difficulty', name)}}
+                {% endfor %}
+            </div>
+            <hr>
+            <div class="form-group">
+                <label><b>Spice Level</b></label>
+                  {% for val, name in [('', 'Any'), ('0', 'Not Spicy'), ('1', 'Mildly Spicy'), ('2', 'Somewhat Spicy'), ('3', 'Very Spicy')] %}
+                  {{create_radio_option(val, spice_level, 'spice-level', name)}}
+                  {% endfor %}
+            </div>
+            <hr>
+            <div class="form-group">
+                <label for="max-time">Max Prep Time</label>
+                <input type="range" class="custom-range" id="max-time" 
+                       name="max-time" min="10" max="60" value="{{max_time}}">10m 60m
+            </div>
+            <hr>
+            <button class="btn btn-sm btn-info">Filter</button>
+        </form>
+    </div>
+    <div class="col">
+        <div class="row">
+            {% for recipe in recipes %}
+            <div class="col-3">
+                <div class="card">
+                    <img class="card-img-top" src="static/images/{{recipe.image}}.jpg" alt="Recipe Image">
+                    <div class="card-body">
+                        <h5 class="card-title">{{recipe.title}}</h5>
+                        <p class="card-text">
+                            <p>Protein: {{recipe.category}}</p>
+                            <p>Difficulty: {{render_difficulty(recipe.difficulty)}}</p>
+                            <p>Spice Level: {{render_spice_level(recipe.spice_level)}}</p>
+                        </p>
+                        <a href="/recipes/{{recipe.id}}" class="btn btn-primary">View Recipe</a>
+                        <form action="/recipes/{{recipe.id}}/add-to-cart" method="POST">
+                            <button class="btn btn-success">Add to Cart</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

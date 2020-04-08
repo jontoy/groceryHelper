@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Recipe App</title>
+
+  <link rel="stylesheet"
+        href="https://unpkg.com/bootstrap/dist/css/bootstrap.css">
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="https://unpkg.com/jquery"></script>
+  <script src="https://unpkg.com/popper"></script>
+  <script src="https://unpkg.com/bootstrap"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.js"></script>
+  <link rel="stylesheet"
+        href="https://use.fontawesome.com/releases/v5.3.1/css/all.css">
+</head>
+
+<body class="{% block body_class %}{% endblock %}">
+<nav class="navbar navbar-light bg-light navbar-expand">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a href={{ url_for('home') }} class="navbar-brand">
+        <img src="/static/images/grocery-icon.svg" alt="logo">
+        <span>GroceryApp</span>
+      </a>
+    </div>
+    <div class="navbar-link">
+      {% if g.user %}
+      {{g.user.username}}
+      {% endif %}
+    </div>
+    <ul class="nav navbar-nav navbar-right">
+      {% if request.endpoint != None %}
+      <li class="nav-item"><a class="nav-link" href={{ url_for('index_recipes') }}>Recipes</a></li>
+      {% endif %}
+      {% if not g.user %}
+      <li class="nav-item"><a class="nav-link" href={{ url_for('signup') }}>Sign up</a></li>
+      <li class="nav-item"><a class="nav-link" href={{ url_for('login') }}>Log in</a></li>
+      {% else %}
+      <li class="nav-item"><a class="nav-link" href={{ url_for('index_carts') }}>Carts</a></li>
+      <li class="nav-item">{{ g.user.username}}</li>
+      <li class="nav-item">
+      {% if g.cart %}
+      {{g.cart.name}}
+      {% else %}
+      No g.cart
+      {% endif %}
+      </li>
+      <li class="nav-item"><a class="nav-link" href={{ url_for('new_cart') }}>New Cart</a></li>
+      <li class="nav-item"><a class="nav-link" href={{ url_for('logout') }}>Log out</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+<div class="container-fluid">
+  {% for category, message in get_flashed_messages(with_categories=True) %}
+  <div class="alert alert-{{ category }}">{{ message }}</div>
+  {% endfor %}
+  {% if g.cart %}
+  {{g.cart.name}}
+  {% else %}
+  No g.cart
+  {% endif %}
+  {% block content %}
+  {% endblock %}
+
+</div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

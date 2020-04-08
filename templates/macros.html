@@ -1,0 +1,45 @@
+{% macro render_difficulty(difficulty_value) %}
+    {% set difficulties = ['Easy', 'Medium', 'Hard'] %}
+    {{difficulties[difficulty_value]}}
+{% endmacro %}
+
+{% macro render_spice_level(spice_value) %}
+    {% set spice_levels = ['Not Spicy', 'Mildly Spicy', 'Somewhat Spicy', 'Very Spicy'] %}
+    {{spice_levels[spice_value]}}
+{% endmacro %}
+
+{% macro create_select_option(value, existing_query, description=None) %}
+    <option value="{{value}}" 
+        {% if value == existing_query %}selected{% endif %}>
+        {% if description %}
+            {{description}}
+        {% else %}
+            {{value}}
+        {% endif %}
+    </option>
+{% endmacro %}
+
+{% macro create_radio_option(value, existing_query, criteria, label=None) %}
+    <div class="form-check">
+        <label>
+        <input type="radio" class="form-check-input" name="{{criteria}}"
+         value="{{value}}" {% if value == existing_query %}checked{% endif %}>
+        {% if label %}
+            {{label}}
+        {% else %}
+            {{value}}
+        {% endif %}
+        </label>
+    </div>
+{% endmacro %}
+
+{% macro render_form_base(form) %}
+  {{ form.hidden_tag() }}
+
+  {% for field in form if field.widget.input_type != 'hidden' %}
+    {% for error in field.errors %}
+      <span class="text-danger">{{ error }}</span>
+    {% endfor %}
+    {{ field(placeholder=field.label.text, class="form-control") }}
+  {% endfor %}
+{% endmacro %}
