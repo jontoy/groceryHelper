@@ -1,0 +1,9 @@
+<nav>
+    <ul class="pagination pagination-lg justify-content-center">
+        <li class="page-item {% if not prev_url %} disabled {% endif %}">
+            <a class="page-link" href="{{ prev_url }}">Prev</a></li>
+        <li class="page-item disabled"><a href="#" class="page-link">{{page}}</a></li>
+        <li class="page-item {% if not next_url %} disabled {% endif %}">
+            <a class="page-link" href="{{ next_url }}">Next</a></li>
+    </ul>
+</nav>

@@ -74,7 +74,7 @@ class User(db.Model):
     username = db.Column(db.Text, nullable=False, unique=True)
     email = db.Column(db.Text, nullable=False, unique=True)
     password = db.Column(db.Text, nullable=False)
-    carts = db.relationship('Cart', passive_deletes=True, lazy='joined')
+    carts = db.relationship('Cart', passive_deletes=True)
 
     def serialize(self):
         return {"id":self.id, 
@@ -124,8 +124,14 @@ class Cart(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.Text, nullable=False, default='Untitled Cart')
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    is_complete = db.Column(db.Boolean, nullable=False, default=False)
     user = db.relationship('User')
-
+    def contents(self):
+        return db.session \
+                .query(RecipeCart.quantity, Recipe) \
+                .join(Recipe) \
+                .filter(RecipeCart.cart_id == self.id) \
+                .order_by(Recipe.title)
     def serialize(self):
         return {"id":self.id, "name":self.name, "user_id": self.user_id}
 
@@ -134,3 +140,7 @@ class RecipeCart(db.Model):
     recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id', ondelete='CASCADE'), primary_key=True, nullable=False)
     cart_id = db.Column(db.Integer, db.ForeignKey('carts.id', ondelete='CASCADE'), primary_key=True, nullable=False)
     quantity = db.Column(db.Numeric, nullable = False)
+    recipe = db.relationship('Recipe')
+    cart = db.relationship('Cart')
+    def serialize(self):
+        return {"recipe_id":self.recipe_id, "cart_id":self.cart_id, "quantity":str(self.quantity)}

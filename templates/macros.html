@@ -1,36 +1,76 @@
 {% macro render_difficulty(difficulty_value) %}
-    {% set difficulties = ['Easy', 'Medium', 'Hard'] %}
-    {{difficulties[difficulty_value]}}
+  <!-- {% set difficulties = ['Easy', 'Medium', 'Hard'] %}
+  {{difficulties[difficulty_value - 1]}} -->
+  {% for star in range(difficulty_value) %}
+  <i class="fas fa-star text-warning"></i>
+  {% endfor %}
+  {% for star in range(3 - difficulty_value) %}
+  <i class="fas fa-star text-light"></i>
+  {% endfor %}
 {% endmacro %}
 
 {% macro render_spice_level(spice_value) %}
-    {% set spice_levels = ['Not Spicy', 'Mildly Spicy', 'Somewhat Spicy', 'Very Spicy'] %}
-    {{spice_levels[spice_value]}}
+  <!-- {% set spice_levels = ['Not Spicy', 'Mildly Spicy', 'Somewhat Spicy', 'Very Spicy'] %}
+  {{spice_levels[spice_value]}} -->
+  <span>
+  {% for pepper in range(spice_value) %}
+  <i class="fas fa-pepper-hot text-danger"></i>
+  {% endfor %}
+  {% for pepper in range(3 - spice_value) %}
+  <i class="fas fa-pepper-hot text-secondary"></i>
+  {% endfor %}
+  </span>
+{% endmacro %}
+
+{% macro create_protein_badge(protein) %}
+{% if protein == 'poultry' %}
+<span class="badge badge-pill badge-info">Poultry</span>
+{% endif %}
+{% if protein == 'pork' %}
+<span class="badge badge-pill badge-warning">Pork</span>
+{% endif %}
+{% if protein == 'beef' %}
+<span class="badge badge-pill badge-danger">Beef</span>
+{% endif %}
+{% if protein == 'vegetarian' %}
+<span class="badge badge-pill badge-success">Vegetarian</span>
+{% endif %}
+{% if protein == 'seafood' %}
+<span class="badge badge-pill badge-primary">Seafood</span>
+{% endif %}
+{% endmacro %}
+
+{% macro create_add_to_cart_button(recipe) %}
+  <div class="add-to-cart card-img-bottom" data-recipe-id="{{ recipe.id }}">
+    <button class="btn btn-block btn-success">
+      Add to Cart 
+    </button>
+  </div>
 {% endmacro %}
 
 {% macro create_select_option(value, existing_query, description=None) %}
-    <option value="{{value}}" 
-        {% if value == existing_query %}selected{% endif %}>
-        {% if description %}
-            {{description}}
-        {% else %}
-            {{value}}
-        {% endif %}
-    </option>
+  <option value="{{value}}" 
+    {% if value == existing_query %}selected{% endif %}>
+    {% if description %}
+      {{description}}
+    {% else %}
+      {{value}}
+    {% endif %}
+  </option>
 {% endmacro %}
 
 {% macro create_radio_option(value, existing_query, criteria, label=None) %}
-    <div class="form-check">
-        <label>
-        <input type="radio" class="form-check-input" name="{{criteria}}"
-         value="{{value}}" {% if value == existing_query %}checked{% endif %}>
-        {% if label %}
-            {{label}}
-        {% else %}
-            {{value}}
-        {% endif %}
-        </label>
-    </div>
+  <div class="form-check">
+    <label>
+    <input type="radio" class="form-check-input" name="{{criteria}}"
+      value="{{value}}" {% if value == existing_query %}checked{% endif %}>
+    {% if label %}
+      {{label}}
+    {% else %}
+      {{value}}
+    {% endif %}
+    </label>
+  </div>
 {% endmacro %}
 
 {% macro render_form_base(form) %}
