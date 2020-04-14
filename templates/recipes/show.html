@@ -9,7 +9,7 @@
     {% include 'partials/toast.html' %}
     <ul class="list-group">
             <div class="card">
-            <img class="card-img-top" src="/static/images/{{recipe.image}}.jpg" alt="Recipe Image">
+            <img class="card-img-top" src="{{generate_image_url(image_path, recipe)}}" alt="Recipe Image">
             <div class="card-body">
                 <h5 class="card-title">{{recipe.title}}</h5>
                 <p class="card-text">
