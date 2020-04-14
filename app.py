@@ -1,16 +1,18 @@
 from flask import Flask, request, redirect, render_template, jsonify, flash, session, g, url_for
-from models import db, connect_db, Recipe, Ingredient, Category, RecipeIngredient, Step, User, Cart, RecipeCart
+from models import db, connect_db, Recipe, Ingredient, Category, RecipeIngredient, Step, User, Cart, RecipeCart, Conversion
 from sqlalchemy import func
+from functools import wraps
 from forms import CartAddForm, UserAddForm, LoginForm
 from sqlalchemy.exc import IntegrityError, InvalidRequestError
 from collections import defaultdict
+import os
 
 CURR_USER_KEY = "curr_user"
 CURR_CART_KEY = "curr_cart"
 
 app = Flask(__name__)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///recipe'
+app.config['SQLALCHEMY_DATABASE_URI'] = (
+    os.environ.get('DATABASE_URL', 'postgresql:///recipe'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
 app.config['SECRET_KEY'] = 'my-secret'
@@ -18,6 +20,15 @@ app.config['RECIPES_PER_PAGE'] = 40
 
 connect_db(app)
 db.create_all()
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if g.user is None:
+            flash("Access Unauthorized.", "danger")
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.before_request
 def add_user_to_g():
@@ -66,6 +77,8 @@ def floatToString(value):
 def home():
     return render_template('home.html')
 
+############################################################################
+# Auth Routes
 ############################################################################
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
@@ -123,7 +136,8 @@ def logout():
     return redirect(url_for('login'))
 
 ##############################################################################
-
+# Recipe Routes
+##############################################################################
 @app.route('/recipes')
 def index_recipes():
     recipes_query = Recipe.query
@@ -140,6 +154,7 @@ def index_recipes():
     spice = request.args.get('spice')
     if spice not in [None, '']:
         recipes_query = recipes_query.filter_by(spice_level=spice)
+    recipes_query = recipes_query.order_by(Recipe.id)
     recipes = recipes_query.paginate(page,app.config['RECIPES_PER_PAGE'], False)
     next_url = url_for('index_recipes', 
                         category=category,
@@ -155,9 +170,11 @@ def index_recipes():
                         spice=spice,
                         page=recipes.prev_num) \
         if recipes.has_prev else None
-
-    recipes_in_cart = RecipeCart.query.filter(RecipeCart.cart_id == g.cart.id).all()
-    recipes_in_cart = [entry.recipe_id for entry in recipes_in_cart]
+    if g.cart:
+        recipes_in_cart = RecipeCart.query.filter(RecipeCart.cart_id == g.cart.id).all()
+        recipes_in_cart = [entry.recipe_id for entry in recipes_in_cart]
+    else:
+        recipes_in_cart = []
     return render_template('recipes/index.html', 
                             recipes=recipes.items,
                             recipes_in_cart=recipes_in_cart, 
@@ -168,23 +185,37 @@ def index_recipes():
                             page=page,
                             next_url=next_url,
                             prev_url=prev_url)
-    
 
 @app.route('/recipes/<int:recipe_id>')
 def show_recipe(recipe_id):
     recipe = Recipe.query.get_or_404(recipe_id)
     steps = Step.query.filter_by(recipe_id=recipe_id).order_by(Step.step_number).all()
-    ingredients = db.session \
-                    .query(RecipeIngredient.quantity, Ingredient.unit, Ingredient.food_name) \
-                    .join(Ingredient) \
-                    .filter(RecipeIngredient.recipe_id == recipe_id) \
-                    .order_by(func.lower(Ingredient.food_name)) \
-                    .all()
-    ingredients = [(floatToString(qty), unit, name) for qty, unit, name in ingredients]
+    ingredients = recipe.contents().all()
+    ingredients = [(floatToString(qty), ingr.unit.lower(), ingr.food_name.lower()) for qty, ingr in ingredients]
     return render_template('recipes/show.html', recipe=recipe, steps=steps, ingredients=ingredients)
 
+@app.route('/api/recipes/<int:recipe_id>/add-to-cart', methods=['POST'])
+def add_to_cart_ajax(recipe_id):
+    if not g.user:
+        return jsonify({"message": "Access Unauthorized: You must be logged in."}), 401
+    recipe = Recipe.query.get_or_404(recipe_id)
+    if not g.cart:
+        create_cart()
+    recipe_cart = RecipeCart.query.filter(RecipeCart.recipe_id == recipe_id, RecipeCart.cart_id == g.cart.id).first()
+    if recipe_cart:
+        recipe_cart.quantity = recipe_cart.quantity + 1
+    else:
+        recipe_cart = RecipeCart(recipe_id=recipe_id, cart_id=g.cart.id, quantity=1)
+    db.session.add(recipe_cart)
+    db.session.commit()
+    return jsonify({"message": f'Recipe {recipe.id} added to cart',
+        "data":recipe_cart.serialize()}), 202
+
+##################################################################################################
+# Cart Routes
 ##################################################################################################
 @app.route('/carts')
+@login_required
 def index_carts():
     carts_query = Cart.query.filter(Cart.user_id == g.user.id)
     if g.cart:
@@ -199,6 +230,7 @@ def index_carts():
     return render_template('carts/index.html', complete_carts=complete_carts, incomplete_carts=incomplete_carts, curr_cart_recipes=curr_cart_recipes)
 
 @app.route('/carts/new', methods=['GET', 'POST'])
+@login_required
 def new_cart():
     form = CartAddForm()
     if form.validate_on_submit():
@@ -209,6 +241,7 @@ def new_cart():
         return redirect('/carts')
     return render_template('/carts/new.html', form=form)
 @app.route('/carts/<int:cart_id>/copy', methods=['POST'])
+@login_required
 def copy_cart(cart_id):
     cart = Cart.query.get_or_404(cart_id)
     recipe_cart = RecipeCart.query.filter(RecipeCart.cart_id == cart_id)
@@ -217,47 +250,56 @@ def copy_cart(cart_id):
     for recipe_id, qty in recipe_qtys:
         db.session.add(RecipeCart(recipe_id=recipe_id, quantity=qty, cart_id=g.cart.id))
     db.session.commit()
-    flash(f'Cart {cart.name} successfully copied.', 'success')
+    flash(f'Cart "{cart.name}" successfully copied.', 'success')
     return redirect(url_for('index_carts'))
     
 @app.route('/carts/<int:cart_id>/activate', methods=['POST'])
+@login_required
 def activate_cart(cart_id):
     cart = Cart.query.get_or_404(cart_id)
     if not cart.is_complete:
         make_cart_active(cart)
-        flash(f'Cart {cart.name} activated!', 'success')
+        flash(f'Cart "{cart.name}" activated!', 'success')
     else:
         flash('A historical cart cannot be activated. Please use the "Pull recipes from cart" functionality', 'danger')
     return redirect(url_for('index_carts'))
 
 @app.route('/carts/<int:cart_id>/delete', methods=['POST'])
+@login_required
 def delete_cart(cart_id):
     cart = Cart.query.get_or_404(cart_id)
     if cart.user_id == g.user.id:
-        if cart.id == g.cart.id:
+        cart_name = cart.name
+        if g.cart and cart.id == g.cart.id:
             clear_active_cart()
         db.session.delete(cart)
         db.session.commit()
-        flash('Cart deleted.', 'success')
+        flash(f'Cart "{cart_name}" deleted.', 'success')
     else:
         flash('Access unauthorized', 'danger')
     return redirect(url_for('index_carts'))
 
+
 @app.route('/carts/<int:cart_id>/checkout')
+@login_required
 def checkout(cart_id):
     cart = Cart.query.get_or_404(cart_id)
-    totals = db.session.query(Ingredient.food_name, Ingredient.unit, func.sum(RecipeIngredient.quantity*RecipeCart.quantity), Category.category_label) \
+    if not cart.user_id == g.user.id:
+        flash('Forbidden Resource: Cart does not belong to user.')
+        return redirect('/carts')
+    totals = db.session.query(Ingredient.food_name, Conversion.unit_to, func.sum(RecipeIngredient.quantity*RecipeCart.quantity*Conversion.conversion_factor), Category.category_label) \
                .select_from(RecipeCart) \
                .join(RecipeIngredient, RecipeCart.recipe_id == RecipeIngredient.recipe_id) \
                .join(Ingredient, RecipeIngredient.ingredient_id == Ingredient.id) \
+               .join(Conversion, Ingredient.conversion_id == Conversion.id) \
                .join(Category, Ingredient.category_id == Category.id) \
                .filter(RecipeCart.cart_id == cart.id) \
-               .group_by(Ingredient.food_name, Ingredient.unit, Category.category_label) \
+               .group_by(Ingredient.food_name, Conversion.unit_to, Category.category_label) \
                .order_by(Category.category_label, func.lower(Ingredient.food_name)).all()
 
     ingr_grouped_by_category = defaultdict(list)
     for name,unit,qty,label in totals:
-        ingr_grouped_by_category[label].append((name, unit, floatToString(qty)))
+        ingr_grouped_by_category[label].append((name.lower(), unit.lower(), floatToString(qty)))
     
     ingr_by_category = [{'category':k, 'ingredients':v} for k,v in ingr_grouped_by_category.items()]
 
@@ -271,39 +313,30 @@ def checkout(cart_id):
     return render_template('carts/checkout.html', ingr_by_category=ingr_by_category)
 
 @app.route('/carts/recipe/<int:recipe_id>/edit', methods=['POST'])
+@login_required
 def edit_cart_item(recipe_id):
     recipe_cart = RecipeCart.query.filter(RecipeCart.recipe_id == recipe_id, RecipeCart.cart_id == g.cart.id).first()
     if not recipe_cart:
-        flash('Recipe not found is cart')
+        flash('Recipe not found is cart', 'danger')
     else:
         quantity = int(request.form.get('quantity'))
         recipe_cart.quantity = quantity
         db.session.add(recipe_cart)
         db.session.commit()
-        flash(f'Cart Recipe "{recipe_cart.recipe.title}" Updated', 'success')
+        flash(f'Cart Recipe "{recipe_cart.recipe.title}" updated', 'success')
     return redirect('/carts')
 
 @app.route('/carts/recipe/<int:recipe_id>/delete', methods=['POST'])
+@login_required
 def delete_cart_item(recipe_id):
     recipe_cart = RecipeCart.query.filter(RecipeCart.recipe_id == recipe_id, RecipeCart.cart_id == g.cart.id).first()
     if not recipe_cart:
-        flash('Recipe not found is cart')
+        flash('Recipe not found is cart', 'danger')
     else:
+        recipe_title = recipe_cart.recipe.title
         db.session.delete(recipe_cart)
         db.session.commit()
+        flash(f'Cart Recipe "{recipe_title}" removed.', 'success')
     return redirect('/carts')
 
-@app.route('/api/recipes/<int:recipe_id>/add-to-cart', methods=['POST'])
-def add_to_cart_ajax(recipe_id):
-    recipe = Recipe.query.get_or_404(recipe_id)
-    if not g.cart:
-        create_cart()
-    recipe_cart = RecipeCart.query.filter(RecipeCart.recipe_id == recipe_id, RecipeCart.cart_id == g.cart.id).first()
-    if recipe_cart:
-        recipe_cart.quantity = recipe_cart.quantity + 1
-    else:
-        recipe_cart = RecipeCart(recipe_id=recipe_id, cart_id=g.cart.id, quantity=1)
-    db.session.add(recipe_cart)
-    db.session.commit()
-    return jsonify({"message": f'Recipe {recipe.id} added to cart',
-        "data":recipe_cart.serialize()})
+

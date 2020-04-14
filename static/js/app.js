@@ -17,8 +17,19 @@ $(document.body).on('click', '.add-to-cart', async (e) => {
     const target = findCorrectElement('add-to-cart', e.target);
     if (target){
         const recipeId = target.dataset.recipeId;
-        const res = await axios.post(`/api/recipes/${recipeId}/add-to-cart`);
-        $toastBody.text(`${res.data.message}`);
+        try{
+            const res = await axios.post(`/api/recipes/${recipeId}/add-to-cart`);
+            $toastBody.text(`${res.data.message}`);
+            $('.toast').addClass('bg-success');
+            $('.toast').removeClass('bg-danger');
+            $('.toast').removeClass('hidden');
+            $('.toast').toast('show');
+        } catch (error) {
+            $toastBody.text(`${error.response.data.message}`);
+            $('.toast').removeClass('bg-success');
+            $('.toast').addClass('bg-danger');
+
+        }
         $('.toast').removeClass('hidden');
         $('.toast').toast('show');
 

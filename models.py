@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from sqlalchemy import func
 
 bcrypt = Bcrypt()
 db = SQLAlchemy()
@@ -26,7 +27,12 @@ class Recipe(db.Model):
     spice_level = db.Column(db.Integer, nullable=True)
     image = db.Column(db.Text)
     steps = db.relationship('Step', backref='recipe', passive_deletes=True)
-    
+    def contents(self):
+        return db.session \
+                .query(RecipeIngredient.quantity, Ingredient) \
+                .join(Ingredient) \
+                .filter(RecipeIngredient.recipe_id == self.id) \
+                .order_by(func.lower(Ingredient.food_name))
     def serialize(self):
         return {"id":self.id, 
         "title":self.title, 
@@ -45,13 +51,24 @@ class Ingredient(db.Model):
     food_name = db.Column(db.Text, nullable=False)
     unit = db.Column(db.Text, nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+    conversion_id = db.Column(db.Integer, db.ForeignKey('conversions.id'), nullable=False)
     recipes = db.relationship('Recipe', secondary="recipes_ingredients", backref='ingredients')
+
 
     def serialize(self):
         return {"id":self.id, 
         "food_name":self.food_name, 
         "unit":self.unit,
         "category_id":self.category_id}
+
+class Conversion(db.Model):
+    __tablename__ = 'conversions'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    unit_from = db.Column(db.Text, nullable=False)
+    unit_to = db.Column(db.Text, nullable=False)
+    food_type = db.Column(db.Text, nullable=False)
+    conversion_factor = db.Column(db.Numeric, nullable=False)
 
 class Category(db.Model):
     __tablename__ = 'categories'
