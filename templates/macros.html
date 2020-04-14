@@ -9,6 +9,10 @@
   {% endfor %}
 {% endmacro %}
 
+{% macro generate_image_url(image_path, recipe) %}
+  {{image_path}}/images/{{recipe.image}}.jpg
+{% endmacro %}
+
 {% macro render_spice_level(spice_value) %}
   <!-- {% set spice_levels = ['Not Spicy', 'Mildly Spicy', 'Somewhat Spicy', 'Very Spicy'] %}
   {{spice_levels[spice_value]}} -->

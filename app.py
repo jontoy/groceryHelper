@@ -15,8 +15,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
     os.environ.get('DATABASE_URL', 'postgresql:///recipe'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['SECRET_KEY'] = 'my-secret'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'my-secret')
 app.config['RECIPES_PER_PAGE'] = 40
+app.config['IMAGE_PATH'] = os.environ.get('IMAGE_PATH', 'https://jt-springboard-recipe-bucket.s3-us-west-2.amazonaws.com')
 
 connect_db(app)
 db.create_all()
@@ -183,6 +184,7 @@ def index_recipes():
                             spice=spice, 
                             time=time,
                             page=page,
+                            image_path=app.config['IMAGE_PATH'],
                             next_url=next_url,
                             prev_url=prev_url)
 
@@ -192,7 +194,7 @@ def show_recipe(recipe_id):
     steps = Step.query.filter_by(recipe_id=recipe_id).order_by(Step.step_number).all()
     ingredients = recipe.contents().all()
     ingredients = [(floatToString(qty), ingr.unit.lower(), ingr.food_name.lower()) for qty, ingr in ingredients]
-    return render_template('recipes/show.html', recipe=recipe, steps=steps, ingredients=ingredients)
+    return render_template('recipes/show.html', recipe=recipe, steps=steps, ingredients=ingredients, image_path=app.config['IMAGE_PATH'])
 
 @app.route('/api/recipes/<int:recipe_id>/add-to-cart', methods=['POST'])
 def add_to_cart_ajax(recipe_id):

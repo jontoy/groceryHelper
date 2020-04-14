@@ -1,6 +1,7 @@
 {% from 'macros.html' import 
                       render_difficulty, 
-                      render_spice_level, 
+                      render_spice_level,
+                      generate_image_url, 
                       create_select_option, 
                       create_radio_option,
                       create_add_to_cart_button,
@@ -51,7 +52,7 @@
       {% for recipe in recipes %}
       <div class="col-3">
         <div class="card recipe-card mb-1">
-          <img class="card-img-top" src="static/images/{{recipe.image}}.jpg" alt="Recipe Image">
+          <img class="card-img-top" src="{{generate_image_url(image_path, recipe)}}" alt="Recipe Image">
           <div class="card-body">
             <h5 class="card-title">{{recipe.title}}</h5>
             <p class="card-text">

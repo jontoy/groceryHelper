@@ -5,4 +5,3 @@ __pycache__/
 static/images/
 secrets.py
 sql-queries.psql
-db_backup.psql
