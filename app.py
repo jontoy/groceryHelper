@@ -73,6 +73,10 @@ def floatToString(value):
     result = '{0:.2f}'.format(value).rstrip('0').rstrip('.')
     return '0' if result == '-0' else result
 
+@app.context_processor
+def utility_processor():
+    return dict(floatToString=floatToString,
+                image_path=app.config['IMAGE_PATH'])
 
 @app.route('/')
 def home():
@@ -184,7 +188,6 @@ def index_recipes():
                             spice=spice, 
                             time=time,
                             page=page,
-                            image_path=app.config['IMAGE_PATH'],
                             next_url=next_url,
                             prev_url=prev_url)
 
@@ -194,7 +197,7 @@ def show_recipe(recipe_id):
     steps = Step.query.filter_by(recipe_id=recipe_id).order_by(Step.step_number).all()
     ingredients = recipe.contents().all()
     ingredients = [(floatToString(qty), ingr.unit.lower(), ingr.food_name.lower()) for qty, ingr in ingredients]
-    return render_template('recipes/show.html', recipe=recipe, steps=steps, ingredients=ingredients, image_path=app.config['IMAGE_PATH'])
+    return render_template('recipes/show.html', recipe=recipe, steps=steps, ingredients=ingredients)
 
 @app.route('/api/recipes/<int:recipe_id>/add-to-cart', methods=['POST'])
 def add_to_cart_ajax(recipe_id):
@@ -242,6 +245,21 @@ def new_cart():
             create_cart()
         return redirect('/carts')
     return render_template('/carts/new.html', form=form)
+
+@app.route('/carts/<int:cart_id>', methods=['POST'])
+@login_required
+def edit_cart(cart_id):
+    cart = Cart.query.get_or_404(cart_id)
+    name = request.form.get('name')
+    if len(name) > 0:
+        cart.name = name
+        db.session.add(cart)
+        db.session.commit()
+        flash(f'Active cart name changed to {cart.name}', 'success')
+    else:
+        flash('Carts must have a name', 'danger')
+    return redirect('/carts')
+
 @app.route('/carts/<int:cart_id>/copy', methods=['POST'])
 @login_required
 def copy_cart(cart_id):

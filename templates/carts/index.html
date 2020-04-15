@@ -1,17 +1,31 @@
-{% from 'macros.html' import render_difficulty, render_spice_level, create_select_option, create_radio_option %}
+{% from 'macros.html' import render_difficulty, 
+                      render_spice_level, 
+                      create_select_option, 
+                      create_radio_option,
+                      render_cart_contents %}
 {% extends 'base.html' %}
 
 {% block content %}
 <hr class="mt-0">
+
 <h1 class="text-center">My Cart</h1>
 
 <div class="container">
   {% if g.cart %}
     <div class="card">
       <div class="card-body">
-        <h5 class="card-title">{{g.cart.name}}</h5>
+        <h5 class="card-title">
+          <form class="cart-form" action="/carts/{{g.cart.id}}" method="POST">
+            <input class="border-0"type="text" name="name" value="{{g.cart.name}}">
+          </form>
+          <form class="float-right" action="/carts/{{g.cart.id}}/delete" method="POST">
+            <button class="ml-2 mb-1 badge badge-pill border-danger badge-light text-danger" aria-label="delete-cart">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </form>
+        </h5>
         <p class="card-text">
-          <ul class="list-group">
+          <ul class="list-group mb-3">
             {% for qty, recipe in curr_cart_recipes %}
               <li class="list-group-item">
                 <form class="cart-form" action="/carts/recipe/{{recipe.id}}/edit" method="POST">
@@ -21,16 +35,15 @@
                   <button class="btn btn-sm btn-outline-secondary">Update</button>
                 </form>
                 <form class="cart-form" action="/carts/recipe/{{recipe.id}}/delete" method="POST">
-                  <button class="btn btn-sm btn-outline-danger">Remove</button>
+                  <button class="ml-2 mb-1 close text-danger" aria-label="delete-recipe">
+                    <span aria-hidden="true">&times;</span>
+                  </button>
                 </form>
               </li>
             {% endfor %}
           </ul>
           <form class="cart-form" action={{url_for('checkout', cart_id=g.cart.id)}}>
             <button class="btn btn btn-success" href={{url_for('checkout', cart_id=g.cart.id)}}>Generate Grocery List!</button>
-          </form>
-          <form class="cart-form" action="/carts/{{g.cart.id}}/delete" method="POST">
-            <button class="btn btn-danger">Delete Cart</button>
           </form>
         </p>
       </div>
@@ -45,7 +58,6 @@
 
   <hr class="mt-0">
   <h3 class="text-center">Saved for Later</h3>
-
   {% if incomplete_carts %}
     <div class="row">
       {% for cart, contents in incomplete_carts %}
@@ -53,16 +65,7 @@
         <div class="col-4">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">{{cart.name}}</h5>
-              <p class="card-text">
-                <ul class="list-group">
-                  {% for qty, recipe in contents %}
-                    <li class="list-group-item text-truncate">
-                      {{qty}} &times {{recipe.title}}...
-                    </li>
-                  {% endfor %}
-                </ul>
-              </p>
+              {{render_cart_contents(cart, contents)}}
               <form class="cart-form" action="/carts/{{cart.id}}/activate" method="POST">
                 <button class="btn btn-sm btn-info">Activate Cart</button>
               </form>
@@ -83,34 +86,21 @@
   </div>
   {% endif %}
   <hr class="mt-0">
-  <h3 class="text-center">Completed</h3>
 
+  <h3 class="text-center">Completed</h3>
   {% if complete_carts %}
   <div class="row">
     {% for cart, contents in complete_carts %}
       {% if cart.id != g.cart.id %}
-      <div class="col-4">
+      <div class="col-12 col-md-6 col-lg-4">
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">{{cart.name}}</h5>
-            <p class="card-text">
-              <ul class="list-group">
-                {% for qty, recipe in contents %}
-                  <li class="list-group-item text-truncate">
-                    {{qty}} &times {{recipe.title}}
-                  </li>
-                {% endfor %}
-              </ul>
-            </p>
+            {{render_cart_contents(cart, contents)}}
             <form class="cart-form" action={{url_for('checkout', cart_id=cart.id)}}>
               <button class="btn btn-sm btn-outline-success" href={{url_for('checkout', cart_id=cart.id)}}>View Grocery List!</button>
             </form>
             <form class="cart-form" action="/carts/{{cart.id}}/copy" method="POST">
               <button class="btn btn-sm btn-outline-info">Pull recipes from cart</button>
-            </form>
-            
-            <form class="cart-form" action="/carts/{{cart.id}}/delete" method="POST">
-              <button class="btn btn-sm btn-danger">Delete Cart</button>
             </form>
           </div>
         </div>

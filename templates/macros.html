@@ -87,3 +87,25 @@
     {{ field(placeholder=field.label.text, class="form-control") }}
   {% endfor %}
 {% endmacro %}
+
+
+{% macro render_cart_contents(cart, contents) %}
+
+  <h5 class="card-title">
+    {{cart.name}}
+    <form class="float-right" action="/carts/{{cart.id}}/delete" method="POST">
+      <button class="ml-2 mb-1 badge badge-pill border-danger badge-light text-danger" aria-label="delete-cart">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </form>
+  </h5>
+  <p class="card-text">
+    <ul class="list-group">
+      {% for qty, recipe in contents %}
+        <li class="list-group-item text-truncate">
+          {{qty}} &times {{recipe.title}}
+        </li>
+      {% endfor %}
+    </ul>
+  </p>
+  {% endmacro %}
