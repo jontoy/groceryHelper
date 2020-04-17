@@ -1,6 +1,4 @@
 {% macro render_difficulty(difficulty_value) %}
-  <!-- {% set difficulties = ['Easy', 'Medium', 'Hard'] %}
-  {{difficulties[difficulty_value - 1]}} -->
   {% for star in range(difficulty_value) %}
   <i class="fas fa-star text-warning"></i>
   {% endfor %}
@@ -14,8 +12,6 @@
 {% endmacro %}
 
 {% macro render_spice_level(spice_value) %}
-  <!-- {% set spice_levels = ['Not Spicy', 'Mildly Spicy', 'Somewhat Spicy', 'Very Spicy'] %}
-  {{spice_levels[spice_value]}} -->
   <span>
   {% for pepper in range(spice_value) %}
   <i class="fas fa-pepper-hot text-danger"></i>

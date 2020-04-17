@@ -26,11 +26,6 @@
         <span>GroceryApp</span>
       </a>
     </div>
-    <div class="navbar-link">
-      {% if g.user %}
-      {{g.user.username}}
-      {% endif %}
-    </div>
     <ul class="nav navbar-nav navbar-right">
       {% if request.endpoint != None %}
       <li class="nav-item"><a class="nav-link" href={{ url_for('index_recipes') }}>Recipes</a></li>
@@ -40,14 +35,7 @@
       <li class="nav-item"><a class="nav-link" href={{ url_for('login') }}>Log in</a></li>
       {% else %}
       <li class="nav-item"><a class="nav-link" href={{ url_for('index_carts') }}>Carts</a></li>
-      <li class="nav-item">{{ g.user.username}}</li>
-      <li class="nav-item">
-      {% if g.cart %}
-      {{g.cart.name}}
-      {% else %}
-      No g.cart
-      {% endif %}
-      </li>
+      <li class="nav-item"><span class="nav-link">{{ g.user.username}}</span></li>
       <li class="nav-item"><a class="nav-link" href={{ url_for('new_cart') }}>New Cart</a></li>
       <li class="nav-item"><a class="nav-link" href={{ url_for('logout') }}>Log out</a></li>
       {% endif %}

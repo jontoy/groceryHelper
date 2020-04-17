@@ -92,7 +92,7 @@ class User(db.Model):
     email = db.Column(db.Text, nullable=False, unique=True)
     password = db.Column(db.Text, nullable=False)
     carts = db.relationship('Cart', passive_deletes=True)
-
+    favorites = db.relationship('Recipe', secondary="favorites", backref="favorited_users")
     def serialize(self):
         return {"id":self.id, 
         "username":self.username, 
@@ -134,6 +134,14 @@ class User(db.Model):
                 return user
 
         return False
+
+class Favorite(db.Model):
+    __tablename__ = 'favorites'
+    __table_args__ = (
+        db.UniqueConstraint('recipe_id', 'user_id', name='unique_recipe_user'),
+    )
+    recipe_id = db.Column(db.Integer, db.ForeignKey('recipes.id', ondelete='CASCADE'), primary_key=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), primary_key=True, nullable=False)
 
 class Cart(db.Model):
     __tablename__ = 'carts'

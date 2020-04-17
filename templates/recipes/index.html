@@ -38,43 +38,64 @@
       <div class="form-group">
         <label for="time">Max Prep Time</label>
         <input type="range" class="custom-range" id="time" 
-                name="time" min="10" max="60" value="{{time}}">10m 60m
+                name="time" min="10" max="60" value="{{time}}">10m-60m
       </div>
       <hr>
+      {% if g.user %}
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" 
+              name="faves" id="faves" {% if faves %}checked{% endif %}>
+        <label class="form-check-label" for="faves">
+          <i class="fas fa-heart text-danger"></i> Favorites Only
+        </label>
+      </div>
+      <hr>
+      {% endif %}
       <button class="btn btn-sm btn-info">Filter</button>
     </form>
   </div>
   <div class="col">
     {% include 'partials/toast.html' %}
     {% if recipes %}
-    {% include 'partials/pagination.html' %}
-    <div class="row">
-      {% for recipe in recipes %}
-      <div class="col-3">
-        <div class="card recipe-card mb-1">
-          <img class="card-img-top" src="{{generate_image_url(image_path, recipe)}}" alt="Recipe Image">
-          <div class="card-body">
-            <h5 class="card-title">{{recipe.title}}</h5>
-            <p class="card-text">
-              <span class="card-icon">
-                <i class="fas fa-shopping-cart 
-                  {% if recipe.id in recipes_in_cart %}text-secondary {% else %} text-light {% endif %}"></i> 
-                <i class="far fa-heart text-secondary"></i>
-              </span>
-              {{create_protein_badge(recipe.category)}}
-              <p>Difficulty: {{render_difficulty(recipe.difficulty)}}</p>
-              <p>Spice Level: {{render_spice_level(recipe.spice_level)}}</p>
-            </p>
-            <a href="/recipes/{{recipe.id}}" class="btn btn-block btn-outline-primary">View Recipe</a>
+      {% include 'partials/pagination.html' %}
+      <div class="row">
+        {% for recipe in recipes %}
+        <div class="col-12 col-md-6 col-lg-4 col-xl-3">
+          <div class="card recipe-card mb-1">
+            <img class="card-img-top" src="{{generate_image_url(image_path, recipe)}}" alt="Recipe Image">
+            <div class="card-body">
+              <h5 class="card-title">{{recipe.title}}</h5>
+              <p class="card-text">
+                <span class="card-icon">
+                  <i class="fas fa-shopping-cart 
+                    {% if recipe.id in recipes_in_cart %}
+                      text-secondary 
+                    {% else %} 
+                      text-light 
+                    {% endif %}">
+                  </i> 
+                  {% if g.user %}
+                    {% if recipe.id in favorites %}
+                      <i class="unfavorite fas fa-heart text-danger" data-recipe-id="{{ recipe.id }}"></i>
+                    {% else %}
+                      <i class="favorite far fa-heart text-secondary" data-recipe-id="{{ recipe.id }}"></i>
+                    {% endif %}
+                  {% endif %}
+                </span>
+                {{create_protein_badge(recipe.category)}}
+                <p>Difficulty: {{render_difficulty(recipe.difficulty)}}</p>
+                <p>Spice Level: {{render_spice_level(recipe.spice_level)}}</p>
+              </p>
+              <a href="/recipes/{{recipe.id}}" class="btn btn-block btn-outline-primary">View Recipe</a>
+            </div>
+            {{create_add_to_cart_button(recipe)}}
           </div>
-          {{create_add_to_cart_button(recipe)}}
         </div>
+        {% endfor %}
       </div>
-      {% endfor %}
-    </div>
-    {% include 'partials/pagination.html' %}
+      {% include 'partials/pagination.html' %}
     {% else %}
-    <h3 class="text-center">No recipes found. Try a different filter.</h3>
+      <h3 class="text-center">No recipes found. Try a different filter.</h3>
     {% endif %}
   </div>
 </div>

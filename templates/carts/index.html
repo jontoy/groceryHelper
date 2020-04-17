@@ -62,8 +62,8 @@
     <div class="row">
       {% for cart, contents in incomplete_carts %}
         {% if cart.id != g.cart.id %}
-        <div class="col-4">
-          <div class="card">
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card mb-2">
             <div class="card-body">
               {{render_cart_contents(cart, contents)}}
               <form class="cart-form" action="/carts/{{cart.id}}/activate" method="POST">
@@ -93,7 +93,7 @@
     {% for cart, contents in complete_carts %}
       {% if cart.id != g.cart.id %}
       <div class="col-12 col-md-6 col-lg-4">
-        <div class="card">
+        <div class="card mb-2">
           <div class="card-body">
             {{render_cart_contents(cart, contents)}}
             <form class="cart-form" action={{url_for('checkout', cart_id=cart.id)}}>

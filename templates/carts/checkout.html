@@ -1,15 +1,18 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2>Your List:</h2>
+<div class="container">
+    <ul class="list-group">
+        <h1 class="text-center list-group-item list-group-item-dark mb-0 mt-2">Your List</h1>
+        {% for ingr_category in ingr_by_category %}
+            <h4 class="list-group-item list-group-item-success">{{ingr_category['category']}}</h4>
+            {% for name, unit, qty in ingr_category['ingredients'] %}
+            <h6 class='list-group-item'><i class="far fa-square"></i> {{qty}} {{unit}} {{name}}</h6>
+            {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
 
-{% for ingr_category in ingr_by_category %}
-<h4>{{ingr_category['category']}}</h4>
-<ul>
-    {% for name, unit, qty in ingr_category['ingredients'] %}
-    <li>{{qty}} {{unit}} {{name}}</li>
-    {% endfor %}
-</ul>
-{% endfor %}
+
 
 {% endblock %}

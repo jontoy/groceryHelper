@@ -1,5 +1,5 @@
 from flask import Flask, request, redirect, render_template, jsonify, flash, session, g, url_for
-from models import db, connect_db, Recipe, Ingredient, Category, RecipeIngredient, Step, User, Cart, RecipeCart, Conversion
+from models import db, connect_db, Recipe, Ingredient, Category, RecipeIngredient, Step, User, Favorite, Cart, RecipeCart, Conversion
 from sqlalchemy import func
 from functools import wraps
 from forms import CartAddForm, UserAddForm, LoginForm
@@ -33,20 +33,22 @@ def login_required(f):
 
 @app.before_request
 def add_user_to_g():
-
     if CURR_USER_KEY in session:
         g.user = User.query.get_or_404(session[CURR_USER_KEY])
     else:
         g.user = None
 @app.before_request
-def add_user_to_g():
-
+def add_cart_to_g():
     if CURR_CART_KEY in session:
         g.cart = Cart.query.get_or_404(session[CURR_CART_KEY])
     else:
         g.cart = None
 
 def create_cart(name=None):
+    """
+    Creates new Cart object, adds it to DB
+    and sets it to g.cart
+    """
     new_cart = Cart(name=name, user_id=g.user.id)
     db.session.add(new_cart)
     db.session.commit()
@@ -145,6 +147,11 @@ def logout():
 ##############################################################################
 @app.route('/recipes')
 def index_recipes():
+    """
+    Show paginated index of recipes in database.
+    Recipes can be filtered by protein category, prep time, difficulty,
+    spice level and whether favorited by current user.
+    """
     recipes_query = Recipe.query
     page = request.args.get('page', 1, type=int)
     category = request.args.get('category')
@@ -159,13 +166,23 @@ def index_recipes():
     spice = request.args.get('spice')
     if spice not in [None, '']:
         recipes_query = recipes_query.filter_by(spice_level=spice)
+
+    favorites_only = request.args.get('faves')
+    if g.user:
+        favorites = [recipe.id for recipe in g.user.favorites]
+        if favorites_only:
+            recipes_query = recipes_query.filter(Recipe.id.in_(favorites))
+    else:
+        favorites = []
     recipes_query = recipes_query.order_by(Recipe.id)
     recipes = recipes_query.paginate(page,app.config['RECIPES_PER_PAGE'], False)
+
     next_url = url_for('index_recipes', 
                         category=category,
                         time=time,
                         difficulty=difficulty,
                         spice=spice,
+                        faves=favorites_only,
                         page=recipes.next_num) \
         if recipes.has_next else None
     prev_url = url_for('index_recipes', 
@@ -173,6 +190,7 @@ def index_recipes():
                         time=time,
                         difficulty=difficulty,
                         spice=spice,
+                        faves=favorites_only,
                         page=recipes.prev_num) \
         if recipes.has_prev else None
     if g.cart:
@@ -180,19 +198,27 @@ def index_recipes():
         recipes_in_cart = [entry.recipe_id for entry in recipes_in_cart]
     else:
         recipes_in_cart = []
+
     return render_template('recipes/index.html', 
                             recipes=recipes.items,
-                            recipes_in_cart=recipes_in_cart, 
+                            recipes_in_cart=recipes_in_cart,
+                            favorites=favorites, 
                             category=category, 
                             difficulty=difficulty, 
                             spice=spice, 
                             time=time,
+                            faves=favorites_only,
                             page=page,
                             next_url=next_url,
                             prev_url=prev_url)
 
 @app.route('/recipes/<int:recipe_id>')
 def show_recipe(recipe_id):
+    """
+    Show detailed information on recipe.
+    Includes recipe ingredients and directions not seen
+    in recipe index thumbnail.
+    """
     recipe = Recipe.query.get_or_404(recipe_id)
     steps = Step.query.filter_by(recipe_id=recipe_id).order_by(Step.step_number).all()
     ingredients = recipe.contents().all()
@@ -200,7 +226,11 @@ def show_recipe(recipe_id):
     return render_template('recipes/show.html', recipe=recipe, steps=steps, ingredients=ingredients)
 
 @app.route('/api/recipes/<int:recipe_id>/add-to-cart', methods=['POST'])
-def add_to_cart_ajax(recipe_id):
+def add_to_cart(recipe_id):
+    """
+    API route to add a recipe to the current user cart.
+    Will return an error if user is not logged in.
+    """
     if not g.user:
         return jsonify({"message": "Access Unauthorized: You must be logged in."}), 401
     recipe = Recipe.query.get_or_404(recipe_id)
@@ -216,12 +246,53 @@ def add_to_cart_ajax(recipe_id):
     return jsonify({"message": f'Recipe {recipe.id} added to cart',
         "data":recipe_cart.serialize()}), 202
 
+@app.route('/api/recipes/<int:recipe_id>/favorite', methods=['POST'])
+def favorite_recipe(recipe_id):
+    """
+    API route to add a recipe to the current user's favorites.
+    Will return an error if user is not logged in 
+    or recipe already in favorites.
+    """
+    if not g.user:
+        return jsonify({"message": "Access Unauthorized: You must be logged in."}), 401
+    recipe = Recipe.query.get_or_404(recipe_id)
+    if not recipe in g.user.favorites:
+        db.session.add(Favorite(user_id=g.user.id, recipe_id=recipe_id))
+        db.session.commit()
+        return jsonify({"message": f'Recipe {recipe_id} favorited.',
+        "data":recipe.serialize()}), 202
+    else:
+        return jsonify({"message": f'Recipe {recipe_id} already in favorites.'}), 405
+
+@app.route('/api/recipes/<int:recipe_id>/unfavorite', methods=['POST'])
+def unfavorite_recipe(recipe_id):
+    """
+    API route to remove a recipe to the current user's favorites.
+    Will return an error if user is not logged in 
+    or recipe not in favorites.
+    """
+    if not g.user:
+        return jsonify({"message": "Access Unauthorized: You must be logged in."}), 401
+    favorite = Favorite.query.filter(Favorite.user_id == g.user.id, Favorite.recipe_id == recipe_id).first()
+    if favorite:
+        db.session.delete(favorite)
+        db.session.commit()
+        return jsonify({"message": f'Recipe {recipe_id} unfavorited.'}), 202
+    else:
+        return jsonify({"message": f'Recipe {recipe_id} not currently in favorites.'}), 405
+
 ##################################################################################################
 # Cart Routes
 ##################################################################################################
 @app.route('/carts')
 @login_required
 def index_carts():
+    """
+    Show index of current user's carts.
+    Carts are divided into active (g.cart), 
+    completed (historical), and incomplete (saved for later).
+    User must be logged in.
+    """
     carts_query = Cart.query.filter(Cart.user_id == g.user.id)
     if g.cart:
         carts_query = carts_query.filter(Cart.id != g.cart.id)
@@ -237,6 +308,12 @@ def index_carts():
 @app.route('/carts/new', methods=['GET', 'POST'])
 @login_required
 def new_cart():
+    """
+    Handle new cart logic.
+    Create new cart and add to DB. User must be logged in.
+    Redirect to cart index.
+    If form not valid, present form.
+    """
     form = CartAddForm()
     if form.validate_on_submit():
         if len(form.name.data) > 0:
@@ -249,6 +326,11 @@ def new_cart():
 @app.route('/carts/<int:cart_id>', methods=['POST'])
 @login_required
 def edit_cart(cart_id):
+    """
+    Handle edit cart name logic.
+    Modifies specified cart's name and add to DB. 
+    User must be logged in. Redirect to cart index.
+    """
     cart = Cart.query.get_or_404(cart_id)
     name = request.form.get('name')
     if len(name) > 0:
@@ -263,6 +345,14 @@ def edit_cart(cart_id):
 @app.route('/carts/<int:cart_id>/copy', methods=['POST'])
 @login_required
 def copy_cart(cart_id):
+    """
+    Copies content of specified cart.
+    Creates a new cart with name "<old_cart_name> (Copy)" and
+    sets recipes and associated quantities to match those of the
+    old cart.
+    The new cart is set to g.cart. User must be logged in.
+    Redirects to cart index.
+    """
     cart = Cart.query.get_or_404(cart_id)
     recipe_cart = RecipeCart.query.filter(RecipeCart.cart_id == cart_id)
     recipe_qtys = [(item.recipe_id, item.quantity) for item in recipe_cart]
@@ -276,6 +366,12 @@ def copy_cart(cart_id):
 @app.route('/carts/<int:cart_id>/activate', methods=['POST'])
 @login_required
 def activate_cart(cart_id):
+    """
+    Sets g.cart to specified cart.
+    Does not work with completed (historical) carts.
+    User must be logged in.
+    Redirects to index carts
+    """
     cart = Cart.query.get_or_404(cart_id)
     if not cart.is_complete:
         make_cart_active(cart)
@@ -287,6 +383,12 @@ def activate_cart(cart_id):
 @app.route('/carts/<int:cart_id>/delete', methods=['POST'])
 @login_required
 def delete_cart(cart_id):
+    """
+    Deletes specified cart from DB.
+    Cart's user_id must match current user.
+    User must be logged in.
+    Redirects to index carts.
+    """
     cart = Cart.query.get_or_404(cart_id)
     if cart.user_id == g.user.id:
         cart_name = cart.name
@@ -303,6 +405,12 @@ def delete_cart(cart_id):
 @app.route('/carts/<int:cart_id>/checkout')
 @login_required
 def checkout(cart_id):
+    """
+    Aggregates quantities of ingredients for recipes in current cart
+    and displays total ingredients required by category and item.
+    Cart's user_id must match current user's. User must be logged.
+    Moves cart status to completed (historical) upon use.
+    """
     cart = Cart.query.get_or_404(cart_id)
     if not cart.user_id == g.user.id:
         flash('Forbidden Resource: Cart does not belong to user.')
@@ -335,28 +443,44 @@ def checkout(cart_id):
 @app.route('/carts/recipe/<int:recipe_id>/edit', methods=['POST'])
 @login_required
 def edit_cart_item(recipe_id):
-    recipe_cart = RecipeCart.query.filter(RecipeCart.recipe_id == recipe_id, RecipeCart.cart_id == g.cart.id).first()
-    if not recipe_cart:
-        flash('Recipe not found is cart', 'danger')
+    """
+    Edits quantity of given recipe in current cart.
+    User must be logged in and have current cart.
+    Redirects to index carts.
+    """
+    if g.cart:
+        recipe_cart = RecipeCart.query.filter(RecipeCart.recipe_id == recipe_id, RecipeCart.cart_id == g.cart.id).first()
+        if not recipe_cart:
+            flash('Recipe not found is cart', 'danger')
+        else:
+            quantity = int(request.form.get('quantity'))
+            recipe_cart.quantity = quantity
+            db.session.add(recipe_cart)
+            db.session.commit()
+            flash(f'Cart Recipe "{recipe_cart.recipe.title}" updated', 'success')
     else:
-        quantity = int(request.form.get('quantity'))
-        recipe_cart.quantity = quantity
-        db.session.add(recipe_cart)
-        db.session.commit()
-        flash(f'Cart Recipe "{recipe_cart.recipe.title}" updated', 'success')
+        flash('Only recipes of current cart can be altered', 'danger')
     return redirect('/carts')
 
 @app.route('/carts/recipe/<int:recipe_id>/delete', methods=['POST'])
 @login_required
 def delete_cart_item(recipe_id):
-    recipe_cart = RecipeCart.query.filter(RecipeCart.recipe_id == recipe_id, RecipeCart.cart_id == g.cart.id).first()
-    if not recipe_cart:
-        flash('Recipe not found is cart', 'danger')
+    """
+    Deletes recipe from current cart.
+    User must be logged in and have current cart.
+    Redirects to index carts.
+    """
+    if g.cart:
+        recipe_cart = RecipeCart.query.filter(RecipeCart.recipe_id == recipe_id, RecipeCart.cart_id == g.cart.id).first()
+        if not recipe_cart:
+            flash('Recipe not found is cart', 'danger')
+        else:
+            recipe_title = recipe_cart.recipe.title
+            db.session.delete(recipe_cart)
+            db.session.commit()
+            flash(f'Cart Recipe "{recipe_title}" removed.', 'success')
     else:
-        recipe_title = recipe_cart.recipe.title
-        db.session.delete(recipe_cart)
-        db.session.commit()
-        flash(f'Cart Recipe "{recipe_title}" removed.', 'success')
+        flash('Only recipes of current cart can be altered', 'danger')
     return redirect('/carts')
 
 
