@@ -8036,6 +8036,7 @@ COPY public.steps (id, recipe_id, step_number, description) FROM stdin;
 COPY public.users (id, username, email, password) FROM stdin;
 777	testerguy	test@test.com	password
 1	chicken_guy	chicken@guy.com	$2b$12$mDS3IaliSwBh68navb5hIuCIjk3gUblBOTqUsweWvYrpua35NQgzW
+3	ysmbnebnlwimoz	ysmbnebnlwimoz@test.com	$2b$12$VrHu/2ryFJfDby5Rh7YCDerfrZ6kONzXhzzkWz.pxDns..y7P6itK
 \.
 
 
@@ -8092,7 +8093,7 @@ SELECT pg_catalog.setval('public.steps_id_seq', 2437, true);
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 1, true);
+SELECT pg_catalog.setval('public.users_id_seq', 3, true);
 
 
 --
