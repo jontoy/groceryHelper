@@ -34,7 +34,11 @@ def login_required(f):
 @app.before_request
 def add_user_to_g():
     if CURR_USER_KEY in session:
-        g.user = User.query.get_or_404(session[CURR_USER_KEY])
+        user = User.query.filter_by(id=session[CURR_USER_KEY]).first()
+        if user:
+            g.user = user
+        else:
+            del session[CURR_USER_KEY]
     else:
         g.user = None
 @app.before_request
