@@ -25,6 +25,7 @@ class Recipe(db.Model):
     prep_time = db.Column(db.Integer, nullable=True)
     difficulty = db.Column(db.Integer, nullable=True)
     spice_level = db.Column(db.Integer, nullable=True)
+    servings = db.Column(db.Integer, nullable=True, default=2)
     image = db.Column(db.Text)
     steps = db.relationship('Step', backref='recipe', passive_deletes=True)
     def contents(self):
@@ -151,12 +152,23 @@ class Cart(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
     is_complete = db.Column(db.Boolean, nullable=False, default=False)
     user = db.relationship('User')
-    def contents(self):
+    def query_contents(self):
         return db.session \
                 .query(RecipeCart.quantity, Recipe) \
                 .join(Recipe) \
                 .filter(RecipeCart.cart_id == self.id) \
                 .order_by(Recipe.title)
+    def query_ingredient_quantities(self):
+        return db.session \
+               .query(Ingredient.food_name, Conversion.unit_to, func.sum(RecipeIngredient.quantity*RecipeCart.quantity*Conversion.conversion_factor), Category.category_label) \
+               .select_from(RecipeCart) \
+               .join(RecipeIngredient, RecipeCart.recipe_id == RecipeIngredient.recipe_id) \
+               .join(Ingredient, RecipeIngredient.ingredient_id == Ingredient.id) \
+               .join(Conversion, Ingredient.conversion_id == Conversion.id) \
+               .join(Category, Ingredient.category_id == Category.id) \
+               .filter(RecipeCart.cart_id == self.id) \
+               .group_by(Ingredient.food_name, Conversion.unit_to, Category.category_label) \
+               .order_by(Category.category_label, func.lower(Ingredient.food_name))
     def serialize(self):
         return {"id":self.id, "name":self.name, "user_id": self.user_id}
 

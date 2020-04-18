@@ -11,3 +11,7 @@
 .recipe-card {
     height: 97%;
 }
+
+.card-columns {
+    column-count: 2;
+ }

@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Recipe App</title>
+  <title>{% block title %}{% endblock %}</title>
 
   <link rel="stylesheet"
         href="https://unpkg.com/bootstrap/dist/css/bootstrap.css">
@@ -23,11 +23,12 @@
     <div class="navbar-header">
       <a href={{ url_for('home') }} class="navbar-brand">
         <img src="{{image_path}}/images/grocery-icon.svg" alt="logo">
-        <span>GroceryApp</span>
+        <span>GroceryHelper</span>
       </a>
     </div>
     <ul class="nav navbar-nav navbar-right">
       {% if request.endpoint != None %}
+      <li class="nav-item"><a class="nav-link" href={{ url_for('about') }}>About</a></li>
       <li class="nav-item"><a class="nav-link" href={{ url_for('index_recipes') }}>Recipes</a></li>
       {% endif %}
       {% if not g.user %}

@@ -79,11 +79,14 @@ def floatToString(value):
 def utility_processor():
     return dict(floatToString=floatToString,
                 image_path=app.config['IMAGE_PATH'])
-
+############################################################################
 @app.route('/')
 def home():
     return render_template('home.html')
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
 ############################################################################
 # Auth Routes
 ############################################################################
@@ -111,7 +114,7 @@ def signup():
             flash("Username already taken", 'danger')
             return render_template('users/signup.html', form=form)
         do_login(user)
-        return redirect(url_for('home'))
+        return redirect(url_for('index_recipes'))
     else:
         return render_template('users/signup.html', form=form)
 
@@ -128,7 +131,7 @@ def login():
         if user:
             do_login(user)
             flash(f"Hello, {user.username}!", "success")
-            return redirect(url_for('home'))
+            return redirect(url_for('index_recipes'))
 
         flash("Invalid credentials.", 'danger')
     return render_template('users/login.html', form=form)
@@ -139,8 +142,8 @@ def logout():
     """Handle logout of user."""
 
     do_logout()
-    flash('You have been successfully logged out.')
-    return redirect(url_for('login'))
+    flash('You have been successfully logged out.', 'success')
+    return redirect(url_for('home'))
 
 ##############################################################################
 # Recipe Routes
@@ -297,12 +300,12 @@ def index_carts():
     if g.cart:
         carts_query = carts_query.filter(Cart.id != g.cart.id)
 
-        curr_cart_recipes = g.cart.contents().all()
+        curr_cart_recipes = g.cart.query_contents().all()
     else:
         curr_cart_recipes = []
 
-    complete_carts = [(cart, cart.contents().all()) for cart in carts_query.filter(Cart.is_complete == True).all()]
-    incomplete_carts = [(cart, cart.contents().all()) for cart in carts_query.filter(Cart.is_complete == False).all()]
+    complete_carts = [(cart, cart.query_contents().all()) for cart in carts_query.filter(Cart.is_complete == True).all()]
+    incomplete_carts = [(cart, cart.query_contents().all()) for cart in carts_query.filter(Cart.is_complete == False).all()]
     return render_template('carts/index.html', complete_carts=complete_carts, incomplete_carts=incomplete_carts, curr_cart_recipes=curr_cart_recipes)
 
 @app.route('/carts/new', methods=['GET', 'POST'])
@@ -320,7 +323,7 @@ def new_cart():
             create_cart(name=form.name.data)
         else:
             create_cart()
-        return redirect('/carts')
+        return redirect(url_for('index_carts'))
     return render_template('/carts/new.html', form=form)
 
 @app.route('/carts/<int:cart_id>', methods=['POST'])
@@ -340,7 +343,7 @@ def edit_cart(cart_id):
         flash(f'Active cart name changed to {cart.name}', 'success')
     else:
         flash('Carts must have a name', 'danger')
-    return redirect('/carts')
+    return redirect(url_for('index_carts'))
 
 @app.route('/carts/<int:cart_id>/copy', methods=['POST'])
 @login_required
@@ -414,16 +417,8 @@ def checkout(cart_id):
     cart = Cart.query.get_or_404(cart_id)
     if not cart.user_id == g.user.id:
         flash('Forbidden Resource: Cart does not belong to user.')
-        return redirect('/carts')
-    totals = db.session.query(Ingredient.food_name, Conversion.unit_to, func.sum(RecipeIngredient.quantity*RecipeCart.quantity*Conversion.conversion_factor), Category.category_label) \
-               .select_from(RecipeCart) \
-               .join(RecipeIngredient, RecipeCart.recipe_id == RecipeIngredient.recipe_id) \
-               .join(Ingredient, RecipeIngredient.ingredient_id == Ingredient.id) \
-               .join(Conversion, Ingredient.conversion_id == Conversion.id) \
-               .join(Category, Ingredient.category_id == Category.id) \
-               .filter(RecipeCart.cart_id == cart.id) \
-               .group_by(Ingredient.food_name, Conversion.unit_to, Category.category_label) \
-               .order_by(Category.category_label, func.lower(Ingredient.food_name)).all()
+        return redirect(url_for('index_carts'))
+    totals = cart.query_ingredient_quantities().all()
 
     ingr_grouped_by_category = defaultdict(list)
     for name,unit,qty,label in totals:
@@ -438,9 +433,9 @@ def checkout(cart_id):
     if g.cart and (cart_id == g.cart.id):
         clear_active_cart()
     
-    return render_template('carts/checkout.html', ingr_by_category=ingr_by_category)
+    return render_template('carts/checkout.html', ingr_by_category=ingr_by_category, cart=cart)
 
-@app.route('/carts/recipe/<int:recipe_id>/edit', methods=['POST'])
+@app.route('/carts/recipe/<int:recipe_id>', methods=['POST'])
 @login_required
 def edit_cart_item(recipe_id):
     """
@@ -460,7 +455,7 @@ def edit_cart_item(recipe_id):
             flash(f'Cart Recipe "{recipe_cart.recipe.title}" updated', 'success')
     else:
         flash('Only recipes of current cart can be altered', 'danger')
-    return redirect('/carts')
+    return redirect(url_for('index_carts'))
 
 @app.route('/carts/recipe/<int:recipe_id>/delete', methods=['POST'])
 @login_required
@@ -481,6 +476,6 @@ def delete_cart_item(recipe_id):
             flash(f'Cart Recipe "{recipe_title}" removed.', 'success')
     else:
         flash('Only recipes of current cart can be altered', 'danger')
-    return redirect('/carts')
+    return redirect(url_for('index_carts'))
 
 

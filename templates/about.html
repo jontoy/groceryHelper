@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %} About {% endblock %}
+
+{% block content %}
+<div class="container">
+  <ul class="list-group">
+    <h1 class="text-center list-group-item list-group-item-primary mt-2 mb-0">About this Project</h1>
+    <h3 class="text-center list-group-item list-group-item-secondary mb-0">The Idea</h3>
+    <span class="list-group-item mb-0">
+    <p>
+      As an avid home cook, I have always found grocery shopping to be the largest pain 
+      point in the entire home cooking process. You end up looping back and forth across the store looking for items, 
+      and it's easy to overlook items in the unsorted lists that generally accompany recipes on recipe sites.
+      You're exhausted before you even start on the "cooking" portion of the home cooking process. 
+    </p>
+    <p>
+      Enter <i>GroceryHelper</i>. With this site you can browse through delicious recipes, pick out your favorites, and 
+      - with a push of a button - generate a sorted grocery list of aggregated ingredient quantities broken down 
+      by the food isle they are most likely to be found in. This allows you to enter the grocery store with a plan,
+      minimize the need to wander throughout the store, and generally make the process as painless as possible.
+    </p>
+    </span>
+    <h3 class="text-center list-group-item list-group-item-secondary mb-0">The Data</h3>
+    <span class="list-group-item">
+    <p>
+      Recipe information is initially scraped from the <a href="https://www.homechef.com/recipes">Home Chef</a> website. 
+      The ingredient list is then passed through the natural language analysis engine of the <a href="https://developer.edamam.com/food-database-api">Edemam Food Database API</a> 
+      to extract food names, quantities and units, which are then passed through the <a href="https://fdc.nal.usda.gov/api-guide.html">FoodData Central API</a> 
+      to classify each ingredient under a USDA category. 
+    </p>
+    <p>
+      As web scraping generally results in messy data, manual cleaning was performed to catch misclassification of foods and categories, often through cross-referencing to their original sources. 
+      Measurement unit conversions are manually compiled on a per-ingredient basis.
+    </p>
+    </span>
+    <h3 class="text-center list-group-item list-group-item-secondary mb-0">Instructions to Use</h3>
+    <span class="list-group-item">
+    <ol>
+      <li><a href={{url_for('signup')}}>Make an account</a> (email addresses are not used in any way, so feel free to enter anything that conforms to an email format).</li>
+      <li>Go to <a href={{url_for('index_recipes')}}>Recipes</a> to view existing recipes in the database. You can filter results by primary protein, difficulty, spiciness, etc.</li>
+      <li>If you want to view more information on a particular recipe, click "View Recipe" to see details such as the ingredient lists and directions.</li>
+      <li>If you like a particular recipe, press the "Add to Cart" button to add it to your current grocery cart. Pressing the button multiple times will increase the quantity appropriately.</li>
+      <li>Head to <a href={{url_for('index_carts')}}>Carts</a> to view the status of your current cart as well as historical carts. From there you can edit things like your cart's name and the quantities of items in your current cart.</li>
+      <li>When your cart's recipes are to your liking press the "Generate Grocery List!" button to view a summary of all the ingredients needed to cook your chosen recipe, broken down by grocery category. The grocery list supports a condensed, printer-friendly format.</li>
+    </ol>
+    </span>
+  </ul>
+  <h3 class="text-center list-group-item list-group-item-secondary mb-0">FAQs</h3>
+  <span class="list-group-item">
+    <h6><strong>Q:</strong> Help! I forgot to save my grocery list and now I can't view my cart anymore! How do I get back to my list?</h6>
+    <p><strong>A:</strong> Once you initially view your grocery list, your cart is considered "complete" and moved to the "Historical" section of your carts section. You can view the list again using the "View Grocery List!" button.</p>
+    <hr>
+    <h6><strong>Q:</strong> After viewing my grocery list I realized I wanted to adjust some things in my cart. How do I do that?</h6>
+    <p><strong>A:</strong> Once a grocery list is viewed, its associated cart is considered complete and cannot be altered. What you can do is press the "Pull recipes from cart" button to create a new cart with the same recipes as an existing historical cart and edit the new cart from there.</p> 
+    <hr>
+    <h6><strong>Q:</strong> How do I change the name of my cart?</h6>
+    <p><strong>A:</strong> From the <a href={{url_for('index_carts')}}>Carts</a> section, click on the name of your current cart to open the ability to change it. When finished, hit enter and it will update.</p> 
+    <hr>
+    <h6><strong>Q:</strong> I noticed certain ingredients listed in a recipe's directions are not covered in the ingredient list. Why is that?</h6>
+    <p><strong>A:</strong> The recipe site that these recipes are scraped from considers certain items such as salt, pepper, and olive oil to be pantry staples, and as such assumes that they will always be on hand. If this does not match your personal circumstances, you may have to adjust the lists accordingly.</p> 
+    <hr>
+    <h6><strong>Q:</strong> I really loved one particular recipe and want to make sure I can have easy access to it in the future. What can I do to facilitate that?</h6>
+    <p><strong>A:</strong> From the <a href={{url_for('index_recipes')}}>Recipes</a> section, click on the <i class="far fa-heart text-secondary"></i> on any recipe card to favorite it. You can then access any favorited recipe using the "<i class="fas fa-heart text-danger"></i> Favorites Only" filter.</p> 
+    <hr>
+  </span>
+</div>
+{% endblock %}

@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import render_form_base %}
-
+{% block title %} Signup {% endblock %}
 {% block body_class %}onboarding{% endblock %}
 
 {% block content %}
 
-  <div class="row justify-content-md-center">
+  <div class="row justify-content-md-center mt-2">
   <div class="col-md-7 col-lg-5">
-    <h2 class="join-message">Make an account!</h2>
+    <h2 class="text-center">Make an account!</h2>
     <form method="POST" id="user_form">
       {{ render_form_base(form=form) }}
       <button class="btn btn-primary btn-lg btn-block">Sign me up!</button>

@@ -191,45 +191,25 @@ with open('unparseable_urls.txt', 'r') as f:
     unparseable_urls = json.loads(f.read())
 
 myParser = RecipeParser()
-# for target_url, category in url_list:
-#     print(target_url)
-#     print('unvisited?')
-#     print((target_url not in visited_urls) and (target_url not in unparseable_urls))
-#     if (target_url not in visited_urls) and (target_url not in unparseable_urls):
-#         try:
-#             myParser.set_url(target_url)
-#             myParser.parseRecipe()
-#             myParser.parse_ingredients()
-#             print('finished parsing')
-#             myParser.commit_parsed_data()
-#             print('finished committing')
-#             visited_urls.append((target_url, category))
-#             with open('visited_urls.txt', 'w') as f:
-#                 json.dump(visited_urls, f, indent=4)
-#         except LookupError as e:
-#             print('ABORTING PARSE')
-#             unparseable_urls.append((target_url, category))
-#             with open('unparseable_urls.txt', 'w') as f:
-#                 json.dump(unparseable_urls, f, indent=4)
-#             time.sleep(8)
-#             continue
-
-
-
-
-# for target_url, category in visited_urls:
-#     print(target_url)
-#      if (target_url not in visited_urls) and (target_url not in unparseable_urls):
-#         try:
-#             myParser.set_url(target_url)
-#             myParser._extract_image_url()
-#             myParser._extract_title()
-#             target_recipe = Recipe.query.filter_by(title=myParser.title).first()
-#             file_name = persist_image('static/images', myParser.image_url)
-#             target_recipe.image = file_name
-#             db.session.add(target_recipe)
-#             db.session.commit()
-#         except LookupError as e:
-#             print('ABORTING PARSE')
-
-#             continue
+for target_url, category in url_list:
+    print(target_url)
+    print('unvisited?')
+    print((target_url not in visited_urls) and (target_url not in unparseable_urls))
+    if (target_url not in visited_urls) and (target_url not in unparseable_urls):
+        try:
+            myParser.set_url(target_url)
+            myParser.parseRecipe()
+            myParser.parse_ingredients()
+            print('finished parsing')
+            myParser.commit_parsed_data()
+            print('finished committing')
+            visited_urls.append((target_url, category))
+            with open('visited_urls.txt', 'w') as f:
+                json.dump(visited_urls, f, indent=4)
+        except LookupError as e:
+            print('ABORTING PARSE')
+            unparseable_urls.append((target_url, category))
+            with open('unparseable_urls.txt', 'w') as f:
+                json.dump(unparseable_urls, f, indent=4)
+            time.sleep(8)
+            continue

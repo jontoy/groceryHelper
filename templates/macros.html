@@ -22,6 +22,14 @@
   </span>
 {% endmacro %}
 
+{% macro render_serving_size(servings) %}
+  <span>
+  {% for person in range(servings) %}
+  <i class="fas fa-male"></i> 
+  {% endfor %}
+  </span>
+{% endmacro %}
+
 {% macro create_protein_badge(protein) %}
 {% if protein == 'poultry' %}
 <span class="badge badge-pill badge-info">Poultry</span>
@@ -89,7 +97,7 @@
 
   <h5 class="card-title">
     {{cart.name}}
-    <form class="float-right" action="/carts/{{cart.id}}/delete" method="POST">
+    <form class="float-right" action={{url_for('delete_cart', cart_id=cart.id)}} method="POST">
       <button class="ml-2 mb-1 badge badge-pill border-danger badge-light text-danger" aria-label="delete-cart">
         <span aria-hidden="true">&times;</span>
       </button>

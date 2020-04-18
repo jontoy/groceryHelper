@@ -1,10 +1,11 @@
 {% from 'macros.html' import render_difficulty, 
-                             render_spice_level, 
+                             render_spice_level,
+                             render_serving_size, 
                              create_add_to_cart_button,
                              create_protein_badge,
                              generate_image_url %}
 {% extends 'recipes/recipe_base.html' %}
-
+{% block title %} {{recipe.title}} {% endblock %}
 {% block content %}
 <div class="container mb-5">
     {% include 'partials/toast.html' %}
@@ -18,6 +19,7 @@
                     <p>Total Prep Time: {{recipe.prep_time}} mins</p>
                     <p>Difficulty: {{render_difficulty(recipe.difficulty)}}</p>
                     <p>Spice Level: {{render_spice_level(recipe.spice_level)}}</p>
+                    <p>Serving Size: {{render_serving_size(recipe.servings)}}</p>
                 </p>
             </div>
             {{create_add_to_cart_button(recipe)}}  

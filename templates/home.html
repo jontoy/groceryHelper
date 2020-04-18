@@ -1,6 +1,12 @@
 {% extends 'base.html' %}
+{% block title %} Home {% endblock %}
 {% block content %}
-<h1>Home Page!</h1>
-<a href={{ url_for('index_recipes') }}>View our recipes!</a>
-<a href="{{ url_for('index_carts') }}">View your carts</a>
+<div class="container">
+<div class="jumbotron mt-2 text-center">
+    <h1 class="display-4">Welcome to GroceryHelper!</h1>
+    <p class="lead">The site that helps you shop for your favorite home recipes.</p>
+    <hr>
+    <a class="btn btn-primary btn-lg" href={{url_for('about')}} role="button">Learn more</a>
+  </div>
+</div>
 {% endblock %}

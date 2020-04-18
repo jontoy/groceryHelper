@@ -4,7 +4,7 @@
                       create_radio_option,
                       render_cart_contents %}
 {% extends 'base.html' %}
-
+{% block title %} Your Carts {% endblock %}
 {% block content %}
 <hr class="mt-0">
 
@@ -15,10 +15,10 @@
     <div class="card">
       <div class="card-body">
         <h5 class="card-title">
-          <form class="cart-form" action="/carts/{{g.cart.id}}" method="POST">
+          <form class="cart-form" action={{url_for('edit_cart', cart_id=g.cart.id)}} method="POST">
             <input class="border-0"type="text" name="name" value="{{g.cart.name}}">
           </form>
-          <form class="float-right" action="/carts/{{g.cart.id}}/delete" method="POST">
+          <form class="float-right" action={{url_for('delete_cart', cart_id=g.cart.id)}} method="POST">
             <button class="ml-2 mb-1 badge badge-pill border-danger badge-light text-danger" aria-label="delete-cart">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -28,13 +28,13 @@
           <ul class="list-group mb-3">
             {% for qty, recipe in curr_cart_recipes %}
               <li class="list-group-item">
-                <form class="cart-form" action="/carts/recipe/{{recipe.id}}/edit" method="POST">
+                <form class="cart-form" action={{url_for('edit_cart_item', recipe_id=recipe.id)}} method="POST">
                   <input type="number" name="quantity" id="quantity" min="1" max="5" value="{{qty}}">
                   &times
-                  <a href="/recipes/{{recipe.id}}">{{recipe.title}}</a>
+                  <a href={{url_for('show_recipe', recipe_id=recipe.id)}}>{{recipe.title}}</a>
                   <button class="btn btn-sm btn-outline-secondary">Update</button>
                 </form>
-                <form class="cart-form" action="/carts/recipe/{{recipe.id}}/delete" method="POST">
+                <form class="cart-form" action={{url_for('delete_cart_item', recipe_id=recipe.id)}} method="POST">
                   <button class="ml-2 mb-1 close text-danger" aria-label="delete-recipe">
                     <span aria-hidden="true">&times;</span>
                   </button>
@@ -66,10 +66,10 @@
           <div class="card mb-2">
             <div class="card-body">
               {{render_cart_contents(cart, contents)}}
-              <form class="cart-form" action="/carts/{{cart.id}}/activate" method="POST">
+              <form class="cart-form" action={{url_for('activate_cart', cart_id=cart.id)}} method="POST">
                 <button class="btn btn-sm btn-info">Activate Cart</button>
               </form>
-              <form class="cart-form" action="/carts/{{cart.id}}/delete" method="POST">
+              <form class="cart-form" action={{url_for('delete_cart', cart_id=cart.id)}} method="POST">
                 <button class="btn btn-sm btn-danger">Delete Cart</button>
               </form>
             </div>
@@ -87,7 +87,7 @@
   {% endif %}
   <hr class="mt-0">
 
-  <h3 class="text-center">Completed</h3>
+  <h3 class="text-center">Historical</h3>
   {% if complete_carts %}
   <div class="row">
     {% for cart, contents in complete_carts %}
@@ -99,7 +99,7 @@
             <form class="cart-form" action={{url_for('checkout', cart_id=cart.id)}}>
               <button class="btn btn-sm btn-outline-success" href={{url_for('checkout', cart_id=cart.id)}}>View Grocery List!</button>
             </form>
-            <form class="cart-form" action="/carts/{{cart.id}}/copy" method="POST">
+            <form class="cart-form" action={{url_for('copy_cart', cart_id=cart.id)}} method="POST">
               <button class="btn btn-sm btn-outline-info">Pull recipes from cart</button>
             </form>
           </div>

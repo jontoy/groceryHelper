@@ -116,6 +116,37 @@ ALTER SEQUENCE public.conversions_id_seq OWNED BY public.conversions.id;
 
 
 --
+-- Name: favorites; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.favorites (
+    id integer NOT NULL,
+    recipe_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+--
+-- Name: favorites_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.favorites_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: favorites_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.favorites_id_seq OWNED BY public.favorites.id;
+
+
+--
 -- Name: ingredients; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -159,7 +190,8 @@ CREATE TABLE public.recipes (
     difficulty integer,
     spice_level integer,
     category text,
-    image text
+    image text,
+    servings integer DEFAULT 2
 );
 
 
@@ -291,6 +323,13 @@ ALTER TABLE ONLY public.conversions ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
+-- Name: favorites id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favorites ALTER COLUMN id SET DEFAULT nextval('public.favorites_id_seq'::regclass);
+
+
+--
 -- Name: ingredients id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -323,13 +362,12 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 --
 
 COPY public.carts (id, name, user_id, is_complete) FROM stdin;
-2	Halloween 2018	1	t
-3	Halloween 2018(copy)	1	t
 4	Easter 2020	1	t
-7	Untitled Cart(copy)	1	t
 16	Sample CART	1	t
 18	Test Cart1	1	t
-20	Untitled Cart	1	f
+25	Halloween 2019	1	t
+31	Halloween 2018	1	f
+33	Halloween 2019(copy)	1	f
 \.
 
 
@@ -349,9 +387,9 @@ COPY public.categories (id, category_label) FROM stdin;
 12	Nuts and Seeds
 4	Oils
 1	Dairy and Eggs
-9	Fruits and Juices
 11	Vegetables
 2	Seasonings
+9	Fruits
 \.
 
 
@@ -415,6 +453,49 @@ COPY public.conversions (id, unit_from, unit_to, food_type, conversion_factor) F
 54	Cup	Ounce	cheddar cheese	4
 55	Ounce	Whole	radish	5
 33	Whole	Ounce	chicken breast	6.5
+\.
+
+
+--
+-- Data for Name: favorites; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.favorites (id, recipe_id, user_id) FROM stdin;
+2	6	1
+3	4	1
+5	22	1
+6	23	1
+8	30	1
+9	27	1
+10	36	1
+11	39	1
+12	37	1
+13	33	1
+14	42	1
+15	46	1
+16	50	1
+17	55	1
+18	57	1
+19	62	1
+20	65	1
+21	70	1
+22	75	1
+23	79	1
+24	78	1
+25	80	1
+26	77	1
+27	76	1
+28	74	1
+29	73	1
+30	82	1
+31	120	1
+32	119	1
+33	118	1
+34	117	1
+35	113	1
+36	114	1
+37	115	1
+38	116	1
 \.
 
 
@@ -874,443 +955,443 @@ COPY public.ingredients (id, food_name, unit, category_id, conversion_id) FROM s
 -- Data for Name: recipes; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.recipes (id, title, prep_time, difficulty, spice_level, category, image) FROM stdin;
-45	Baked Pesto Pasta\nwith eggplant and sun-dried tomatoes	50	2	0	vegetarian	eb3bf2d91f
-18	Beef & Poblano Tamale Pie\nwith cornbread-cheddar crust	55	1	1	beef	14b68e504f
-2	Brown Butter Shrimp\nwith smoked Gouda grits	35	1	1	seafood	a6a15f1830
-34	Brown Butter Shrimp and Arugula Salad\nwith smoked Gouda grits	35	1	1	seafood	2397ffd566
-28	Calypso Chicken\nwith pineapple-red pepper salsa and charred cilantro-lime cauliflower	45	1	0	poultry	f3967fcac1
-21	Cauliflower "Risotto"\nWith Sun-Dried Tomatoes & Peas	35	2	0	vegetarian	2e2b3532d0
-67	Chicken Scaloppine with Mustard Cream Sauce\nwith sautéed mushrooms and squash fideos	45	2	0	poultry	e5425ac41c
-68	Chimichurri Sirloin Steak \nWith Goat Cheese & Grilled Vegetables	35	1	1	beef	32c333ef73
-4	Classic Chicken Piccata\nwith angel hair pasta and lemon-caper sauce	35	2	0	poultry	9720da9d1d
-6	Clementine and Hot Honey Chicken\nwith sunchokes and balsamic jus	40	1	2	poultry	aae23b533a
-52	Coffee-Rubbed Pork Tenderloin\nwith honey-roasted root vegetables	45	1	0	pork	aaa676fe2c
-61	Crispy Skin-on Chicken with Steakhouse Mushrooms\nand garlicky spinach	45	1	0	poultry	660c7623d7
-10	Curried Lentil Bisque\nWith Coconut Milk, Cilantro, and Toasted Pepitas	40	1	1	vegetarian	d0b2464662
-57	Double Decker Poblano Tostadas \nWith Spanish Rice	40	1	1	vegetarian	6bc5ef4dde
-19	Farmstand Salad\nWith Goat Cheese, Apple, and Farro	35	1	0	vegetarian	c61d13fa4b
-11	Fresh Summer Gazpacho\nWith Cucumber, Grape Tomatoes and Corn	30	1	1	vegetarian	ad47aa9e8c
-41	Grilled Chicken with Charred Romaine \nWith a Tarragon-Champagne Vinaigrette	35	1	1	poultry	05f3aa7d54
-51	Grilled Pesto Flatbreads\nwith balsamic-feta tomato salad	35	1	0	vegetarian	e5cb47f620
-54	Healthy Takeout Bourbon Chicken\nWith Chicken Thighs, Water Chestnuts, Broccoli, and Jasmine Rice	35	1	1	poultry	54fd86109f
-29	Healthy Takeout Kung Pao Shrimp\nWith Three Peppers, Honey Roasted Peanuts, and Brown Rice	30	1	2	seafood	c4c71254cd
-24	Italian Chicken Vesuvio\nWith Peas and Potato Wedges in a Lemon-Butter Sauce	35	1	1	poultry	9614e6e5f9
-53	Italian Pork Chop\nWith Mozzarella Baked Tomatoes and Green Beans	35	2	2	pork	82fae5a6b6
-48	Italian Sausage Stromboli\nwith spinach-mozzarella filling and marinara dipping sauce	60	3	1	pork	2c0d00e22a
-60	Japanese-Style Jasmine Rice Turkey Meatballs\nWith Stir Fried Baby Bok Choy	35	1	1	poultry	a9d339825f
-50	Maple-Glazed Pork Tenderloin\nwith Brussels sprouts	45	2	0	pork	56c9aa6a84
-56	Maple-Miso Glazed Salmon \nwith roasted Brussels and apples	35	1	0	seafood	167e2f4837
-44	Mediterranean Chickpea Fritters \nWith Herbed Quinoa and Tzatziki Sauce	35	1	1	vegetarian	17382b05e3
-43	Mushroom-Spinach Lasagna Rolls\nwith ricotta and mozzarella cheeses	50	1	1	vegetarian	039fb2efe4
-35	New England Cod Chowder\nwith garlic-parsley croutons	45	1	0	seafood	95cec5352c
-32	Pasta e Fagioli Soup\nWith White Beans and Italian Seasonings	35	2	2	vegetarian	e5af24bb4d
-17	Pork Chop with Candied Walnut Butter\nand Parmesan-roasted acorn squash	40	2	0	pork	8bf0991103
-1	Pork Shumai Meatballs\nwith ponzu dipping sauce and snap peas	35	2	0	pork	bea03ec811
-62	Portuguese Truffled Spaghetti\nWith Chickpeas, Pimentão, and Mushrooms	35	1	1	vegetarian	e434b0db80
-23	Pumpkin Gnocchi in Sage-Brown Butter Cream\nWith Candied Pecans, Sun-Dried Tomatoes, and Bleu Cheese	40	3	0	vegetarian	db72c7cc69
-27	Rigatoni with Sweet Pea Pesto  \nWith Fresh Basil, Mint, and Toasted Pine Nuts	35	1	1	vegetarian	e50c5dda02
-46	Salmon in Lemongrass-Ginger Broth\nWith Bok Choy and Shiitakes	50	2	3	seafood	956c4c8b08
-49	San Francisco-Style Shrimp Cioppino\nWith Spiced Tomato and White Wine Broth	35	2	2	seafood	493f10d7be
-30	Sherry Wine Demi-Glace Sirloin Steak\nwith mashed potatoes and balsamic Brussels sprouts	45	2	0	beef	c1682665b0
-13	Shrimp and Sweet Pea Risotto\nwith sun-dried tomatoes and Parmesan	40	2	0	seafood	fe7c36e729
-42	Shrimp Fra Diavolo\nWith Linguine and Robust Chile Flake Tomato Sauce	35	1	2	seafood	a93f19cd3a
-39	Sicilian-Style Turkey Meatballs\nWith Creamy Polenta and Tomato Ragout	35	1	1	poultry	3fbc1b8196
-59	Sirloin Steak with Blue Cheese Compound Butter\nwith green beans and roasted fingerling potatoes	50	3	0	beef	e075232ecd
-22	Southwestern Pan-Seared Chicken\nWith Sweet Potato and Black Bean Salsa	35	1	1	poultry	716920f4dd
-15	Spaghetti alla Puttanesca\nwith roasted red peppers, artichoke hearts, olives, and capers	35	1	1	vegetarian	9d8c89bf6f
-36	Spanish-Style Green Olive Linguine\nWith Capers, Lemon Zest, and Toasted Pine Nuts	35	2	2	vegetarian	8d43d633b9
-65	Spinach-Artichoke Chicken\nwith roasted broccoli and radishes	40	1	0	poultry	83ed1925ed
-12	Sweet Potato and Wheat Berry Buddha Bowl\nwith kale chips and tahini turmeric dressing	40	1	0	vegetarian	a15517f24f
-38	Tamarind Shrimp with Coconut Curry\nwith jasmine rice and zucchini	35	1	1	seafood	a8344781f7
-16	Tex-Mex Turkey Taco Salad\nwith corn and tomatoes	30	1	0	poultry	e52faff4df
-7	Texas-Style Steak on Toast\nwith smashed red potatoes and red onion gravy	40	2	0	beef	235d2d311e
-26	Tonkatsu Salmon\nwith miso-ginger vegetable medley	40	1	0	seafood	f98d765435
-8	Truffled Demi-Glace Sirloin Steak\nwith lyonnaise potatoes and peas	40	1	0	beef	e008c42680
-40	Truffled Three Cheese Flatbread\nwith grape tomatoes and arugula	30	1	0	vegetarian	247c9ffe45
-31	Turkey Tetrazzini with Squash "Fideos"\nWith Crispy Shallot Topping	40	1	0	poultry	8e9996b7ae
-37	Vegetable Quesadillas\nWith Oaxacan Cheese, Black Beans, and Chipotle Crema	35	2	2	vegetarian	4084ab2345
-55	Amaranth Bowl\nwith green beans, tomatoes, arugula, and Parmesan cheese	40	2	0	vegetarian	1dd7465ab5
-135	Argentine Flat Iron Steak\nwith salsa criolla and crispy potatoes	40	1	0	beef	05ab36ef99
-78	Beef Meatball and Mushroom Polenta\nWith Rich Porcini Ragout and Asiago Cheese	35	1	1	beef	162ea7c842
-99	Bone-In Pork Chop with Parsley-Garlic Butter\nwith spicy peas and carrots	45	1	1	pork	acff84da96
-94	Butternut Squash Quesadillas\nWith Black Bean Soup and Colby-Jack Cheese	35	1	1	vegetarian	185f658ae0
-82	Chayote Squash Enchiladas Verdes\nwith poblano pepper and Oaxacan cheese	40	1	2	vegetarian	9faa307cdd
-114	Chicken and Brown Rice Burrito Bowl\nWith Salsa and Homemade Guacamole	35	1	0	poultry	eef323c6ae
-103	Chicken Pad Thai\nwith carrots, roasted peanuts, and cilantro	35	1	2	poultry	30b1fdc1dd
-108	Chicken Quinoa Pilaf\nWith Oven-Roasted Chicken and Garden Vegetables	35	1	1	poultry	93bdd18bc3
-116	Chicken with Burrata Cheese, Charred Tomatoes, and Ciabatta Garlic Bread\nwith roasted vegetables	50	1	0	poultry	06b87905c3
-121	Chili Rellenos Tacos\nWith Garlic Black Beans	35	1	2	vegetarian	2fb89fbffe
-101	Classic Shrimp with Lobster Sauce\nWith Broccolini and Jasmine Rice	35	1	1	seafood	3ab300afe2
-130	Cremini Mushroom Barley Bowl\nWith Pickled Shiitake Mushrooms	35	2	0	vegetarian	337246681c
-98	Enchilada Turkey-Stuffed Pepper Trio\nWith Melted Cheese and Cilantro	45	1	2	poultry	3c9d9ef914
-87	Garlic and Lemon-Crusted Salmon\nwith creamed kale and charred tomatoes	45	2	0	seafood	dcaabb34a1
-97	Glazed Squash and Quinoa Bowl\nwith sautéed kale and shallots	45	1	2	vegetarian	627773ee7b
-122	Green Machine Chicken Salad\nWith Tarragon and Lemon Vinaigrette	40	1	1	poultry	bd493fd57e
-73	Grilled Chicken and Pear Salad\nwith goat cheese, walnuts, and balsamic onions	35	1	0	poultry	d79fc244da
-81	Healthy Takeout Szechuan Chicken and Green Beans\nwith brown rice and water chestnuts	45	1	2	poultry	ca0fac16d9
-77	Honey-Garlic Chicken\nWith Parmesan Vegetable Medley	35	1	0	poultry	e41c6ea46e
-126	Jumbo Tofu Ricotta Stuffed Shells \nWith Fresh Herb Tomato Sauce	50	1	1	vegetarian	66cbe9234c
-124	Kung Pao Chicken\nWith Dried Chilies, Peanuts, and Green Onions	35	1	1	poultry	858c91421c
-74	Miso Lemongrass Seared Chicken\nwith sesame-soy red peppers and broccolini	40	1	0	poultry	04f0c5dc6c
-110	Mongolian Beef\nand roasted broccoli	35	1	1	beef	e1b8819e86
-109	Moroccan Fish Chermoula\nWith Shaved Cucumber Salad	40	1	1	seafood	e50a4b3912
-71	North Indian Aloo Tikki\nCrispy Potato Cakes with Pineapple-Mint Chutney	35	1	1	vegetarian	a920b955b4
-102	Oktoberfest Pork Medallions\nwith smashed potatoes and roasted Brussels sprouts	50	1	1	pork	0887cc8e61
-104	Old Bay Grilled Chicken and Zucchini Sauté\nwith kale and aioli	35	1	0	poultry	cdcf19cba6
-111	One-Skillet Sherry Chicken\nWith Carrots, Rutabagas, and Chard	35	1	0	poultry	d0b9232534
-128	Parisian Bistro Steak\nwith dauphinoise potatoes and green beans	55	2	0	beef	1854bb09e2
-137	Pomegranate Glazed Drumsticks\nWith Cucumber Salad and Green Beans	40	1	1	poultry	18232fc109
-90	Pork Chop alla Pizzaiola\nwith roasted summer squash	45	1	0	pork	eba81fc509
-96	Pork Chop Châteaubriand\nwith duchess potatoes and roasted carrots	50	1	0	pork	f714b1089e
-117	Pretzel-Crusted Chicken Breast \nWith Grainy Mustard and Sharp Cheddar Sauce	40	1	1	poultry	9c32aafe66
-92	Roasted Tilapia Poblano\nWith Fresh Salsa and Braised Kale	40	1	1	seafood	6d9c550bfc
-123	Rosemary-Cider Chicken\nwith roasted apples and butternut squash	40	1	0	poultry	ab2f75649f
-132	Salisbury Steak\nwith whipped potatoes, asparagus, and sherry-mushroom gravy	55	2	0	beef	9f00a0ac7b
-75	Sesame-Crusted Chicken over Butter Lettuce Salad\nWith Lime-Ginger Dressing	30	1	0	poultry	2f7fc0463d
-134	Shrimp Jambalaya \nWith Okra, Peas, and Roasted Red Peppers	40	1	2	seafood	2111286855
-105	Shrimp Scampi\nwith cheesy pull-apart bread	35	1	1	seafood	51ac0226e9
-125	Sirloin Steak and Fines Herbes Butter\nwith garlic, potato, and red pepper hash	50	1	0	beef	f8445bed82
-86	Sirloin Steak with Brown Butter Bordelaise\nwith Brussels sprouts and roasted potatoes	45	1	0	beef	2f7b90ed1a
-120	Skillet Chicken Chasseur\nwith mushrooms and white wine	40	1	0	poultry	855089fc78
-106	Soho Steak\nwith crispy Parmesan potatoes and mushrooms	45	1	0	beef	1ad52f528d
-107	Southern Pimento Grilled Cheese\nwith kale salad	35	1	1	vegetarian	27c68a6297
-100	Southern-Style Shrimp and Grits\nWith Cheddar, Jalapeño, Green Onions, and Smoked Paprika	35	1	1	seafood	16ca13f617
-131	Spinach and Ricotta Stuffed Chicken Breasts\nWith Zucchini and Yellow Squash Ribbons	35	2	1	poultry	421d6f9d3b
-88	Sticky Sesame Chicken\nWith Citrus Kale Salad	35	1	0	poultry	4c135d9e86
-85	Summer Seared Salmon\nWith Sugar Snap Pea and Fennel Slaw	35	1	1	seafood	a857565d04
-118	Sweet Chili Chicken Lettuce Wraps\nwith radishes, green onions, and water chestnuts	30	1	2	poultry	3f7c8bf5f0
-83	Swiss-Style Potato and Leek Rösti\nWith Chickpea, Carrot, and Coriander Salad	35	1	1	vegetarian	a55abcc59c
-76	Tandoori Chicken\nWith Turmeric Rice and Cucumber-Tomato Sambal	50	1	2	poultry	fac77b66d0
-136	Truffled Golden Beet Risotto\nwith cremini mushrooms, asparagus, and goat cheese	50	2	0	vegetarian	121c65e23f
-91	Truffled Mushroom Risotto\nwith fresh herbs and cracked peppercorns	50	1	1	vegetarian	3917bb1412
-115	Turkey and Goat Cheese Meatballs\nWith Pesto Spaghetti and Baby Arugula	50	2	1	poultry	6d1bdaaf5c
-113	Turkey-Stuffed Swiss Chard\nWith Tomato Ragout, Thyme, and Parmesan Cheese	35	1	1	poultry	e91db17d17
-129	Tuscan Pork Chops\nWith Bleu Cheese Polenta and Tomato Pan Sauce	40	1	0	pork	6affca24db
-84	Weeknight Chicken Quesadillas\nwith Oaxacan cheese and pico de gallo	55	2	2	poultry	d29a4f2616
-174	Blackened Chicken Salad\nWith Cracked Pepper Buttermilk Dressing	40	1	2	poultry	8e455b0ed3
-157	Bucatini all’Amatriciana\nwith prosciutto and pecorino garlic bread	40	1	2	pork	d5c7a11f6e
-210	Butter Chicken\nwith chicken thighs, basmati rice, fresh jalapeño, and curried tomato sauce	35	1	2	poultry	e51ac0197d
-145	Caesar Salad Pizza\nwith portobello mushrooms and mozzarella	30	2	0	vegetarian	d598a69029
-206	Caramelized Onion and Apple Ciabatta\nwith Swiss cheese and Caesar salad	40	2	0	vegetarian	f1b6618c46
-155	Chicken and Roasted Beet Salad\nwith goat cheese and pistachios	40	1	0	poultry	bcdbdada02
-183	Chili-Lime Salmon\nwith roasted chayote squash and mojo de ajo	50	1	0	seafood	ee334a511a
-138	Chinese BBQ Pork\nWith Egg Drop Soup and Broccoli	35	2	0	pork	409c4c32ef
-199	Chipotle Chicken with Cheddar Buttermilk Dumplings\nWith Stewed Carrots and Peas	40	2	2	poultry	066de068a3
-194	Coffee-Rubbed Steak\nwith brown butter mashed potatoes and roasted carrots	45	2	0	beef	9939a1c407
-198	Coq au Vin with Bone-In Chicken\nwith mashed potatoes	50	2	0	poultry	1adc13adc3
-173	Crispy Rice Pork Chop\nwith charred blue cheese broccoli	35	2	0	pork	eab846b8ab
-200	Fall Risotto\nwith roasted butternut squash, shallot, and walnuts	50	2	0	vegetarian	075d018d34
-181	Fig-Glazed Pork Tenderloin\nwith roasted Brussels sprouts and carrots	45	1	0	pork	49f578f0d8
-141	Five-Spice Turkey Soup & Salad\nWith Ginger, Cilantro, and Mint	40	1	1	poultry	0d98b81b61
-203	French Toast and Bacon Monte Cristo\nwith provolone and raspberry preserves	45	1	0	pork	53087677c9
-143	Grilled Chicken with Cherry Chimichurri\nwith summer vegetables	40	1	0	poultry	1f4c26b6a9
-188	Harissa Grilled Chicken\nWith Arugula, Feta, Heirloom Tomato, and Green Bean Salad	35	2	2	poultry	90177b7d10
-170	Healthy Takeout: Shrimp and Pineapple Fried Rice\nWith Toasted Cashews and Peas	35	2	1	seafood	65e3c372fc
-160	Herbes de Provence Pork Tenderloin\nWith Zucchini and Yellow Squash	35	1	0	pork	f1d79d6a1d
-176	Hoisin-Glazed Salmon\nWith Radish-Cucumber Orange Salad	30	1	1	seafood	60f00eb106
-195	Honey Butter Fried Chicken\nwith green beans and biscuits	55	2	1	poultry	d97115c0de
-192	Indian-Spiced Cauliflower Steak with Tikka Masala Sauce\nWith Naan, Red Pepper-Raisin Relish, and Cilantro Oil	40	2	1	vegetarian	201672d3b4
-159	Japanese Soba Bowl\nWith Crispy Vegetables and Sesame Seeds	35	1	1	vegetarian	b5f041d83d
-147	Linguine Carciofi\nwith artichokes, pecorino cheese, and sun-dried tomatoes	35	1	0	vegetarian	8c9dbf5719
-207	Loaded Baked Potato Flatbread\nand cheddar, sour cream, chives, and roasted tomatoes	45	1	0	vegetarian	7b4ddcac28
-164	Mexican Beef Lasagna\nWith Zesty Taco Meat, Sour Cream, and Radishes	35	1	1	beef	d69f0ff59c
-172	Mexican Street Corn Salad\nin a tortilla bowl	35	1	0	vegetarian	9d0247f673
-186	Mojito Pork Chops\nwith mandarin orange and slivered almond salad	35	1	0	pork	ef68b04da9
-169	One-Skillet Lemon Orzo Risotto\nwith asparagus and Sweety Drop peppers	35	1	0	vegetarian	50bd76517f
-167	Philly Cheesesteak Pizza with Caramelized Onions\nWith Romaine Salad and Spicy White Wine Vinaigrette	35	1	1	beef	e2feee21d6
-139	Pizza with Ricotta and Shaved Asparagus\nWith Lemon-Herb Ricotta and Caramelized Shallots	40	1	1	vegetarian	17d49fc0be
-148	Pork Sausage Rigatoni\nWith Butternut Squash, Goat Cheese, and Pepitas	35	1	1	pork	57d3de5949
-163	Portobello and Pumpkin Spaghetti\nWith Robust Tomato Sauce	30	1	1	vegetarian	71b9faa520
-193	Pumpkin Seed Falafel Lettuce Wraps\nWith Tzatziki Sauce and Green Onion	35	1	1	vegetarian	60faed977e
-175	Quick-Braised Salmon\nwith miso-honey Caesar salad	35	1	0	seafood	473111342f
-140	Roasted Vegetable Quesadillas\nWith Oaxacan Cheese, Black Beans, and Chipotle Crema	35	2	2	vegetarian	4c436de8b3
-190	Rosemary and White Bean Orecchiette\nKalamata Olives, Chile Flake, Arugula, and Pine Nuts	35	1	1	vegetarian	3f7f467f08
-187	Seared Sirloin with Pecorino-Romano Basil Cream \nAnd Roasted Peppers and Potatoes	40	2	1	beef	14864a7ad9
-180	Shaved Asparagus and Quinoa Salad\nwith goat cheese, Anjou pear, and fried shallots	35	1	0	vegetarian	535769bf95
-184	Sirloin Steak with Red Pepper Steak Sauce\nWith Roasted Red Potatoes and Green Beans	40	1	1	beef	9c3954a75a
-209	Smoky Eggplant Steaks \nWith Balsamic Cashew Cream and Pine Nuts	35	1	1	vegetarian	78c9df3f38
-156	Sous-Vide Pork Shank \nWith Rustic Cannelini Bean Stew	55	2	0	pork	38ddb01920
-189	Spicy Louisiana-Style Tilapia \nWith Pan-Roasted Vegetable Relish	35	1	1	seafood	848b098fb2
-197	Spinach and Artichoke Flatbread\nwith roasted red peppers and red pepper flakes	35	1	1	vegetarian	a997d1b208
-168	Spinach and Parmesan-Stuffed Chicken\nwith lemon-garlic roasted cauliflower	35	3	0	poultry	28632027e7
-191	Steak Fajita Bowl\nWith Spanish Rice, Black Beans, and Sautéed Peppers	35	2	2	beef	8dc0daf0b4
-161	Steelhead Trout Niçoise\nwith warm potato and spinach salad	45	2	0	seafood	9297d778c1
-185	Summer Celebration Special: Surf and Turf\nWith Steak, Lobster Tail, Twice-Baked Potatoes, and Asparagus	40	1	1	beef	f2cf50290f
-146	Swiss-Smothered Chicken\nWith Green Beans and Whipped Cauliflower	50	2	1	poultry	2bf13ab442
-158	Swordfish Primavera\nWith a Summer Vegetable Medley and Sweet Pea Sauté	35	1	1	seafood	30019ea97b
-208	Tilapia Puttanesca	35	1	1	seafood	ae5be11da4
-171	Tunisian Lentil Salad\nWith Lemon Zest, Spinach, and Green Chili	40	1	1	vegetarian	e733fc29df
-162	Ultimate Beef Nachos\nWith Creamy Mexican Cheese, Salsa, and Pickled Onions	35	1	1	beef	cf850c40a8
-182	Wild Mushroom Ravioli\nWith a Fresh Parsley Butter Sauce and Walnuts	35	1	1	vegetarian	dce5b87b64
-179	Asian Shiitake Hot Pot\nWith Shiitake Mushrooms, Broccolini, and Snow Peas	35	1	2	vegetarian	2b1e0fac2e
-250	Asian Hot Pot\nWith Rice Noodles, Shiitake Mushrooms, and Sesame Oil	35	1	2	vegetarian	edcfe69fd5
-275	Berbere Chicken Thighs\nwith apricot-almond couscous and green beans	35	2	2	poultry	15889da41d
-253	Brasserie-Style Sirloin Steak\nwith truffle frites and herb butter	50	2	0	beef	6ba9ffb69f
-231	Brazilian Flat Iron Steak\nwith tomato rice and marinated zucchini	35	1	1	beef	3af5633c50
-255	Brazilian Shrimp Moqueca\nWith Coconut-Tomato Sauce, Zucchini, Grape Tomatoes, and Mashed Rutabagas	35	1	0	seafood	2d28589d7a
-258	Brown Sugar and Pecan-Crusted Pork Tenderloin Medallions\nwith sunchokes and carrots	35	1	1	pork	76762afe42
-251	Buffalo Cauliflower Bites Salad\nWith Shaved Cucumber, Carrot, and Bleu Cheese Salad	50	1	1	vegetarian	8b6126b4a8
-223	Burrata & Pesto Risotto\nwith tomato vinaigrette and roasted corn	50	3	0	vegetarian	76f30f92ac
-245	Burrata Pizza Margherita\nwith fresh tomato sauce and balsamic greens	35	2	0	vegetarian	02f120a3e9
-212	Butternut Squash Penne\nWith Herbed Goat Cheese	30	1	1	vegetarian	2f3fdbcae0
-234	Chicken a la King\nWith Mushrooms, Peppers, Peas, and Cauliflower "Rice"	40	1	0	poultry	0e455a99a9
-276	Chicken Breast in Red Wine-Butter Sauce\nWith Creamed Kale and Seared Mushrooms	40	2	0	poultry	738a2e7f23
-259	Classic Garlic Hummus Appetizer: Serves 3-4 People \nWith Fresh Vegetables and Pita Bread	30	1	1	vegetarian	9ed4683259
-236	Cornmeal-Crusted Fried Green Tomato Sandwich\nWith Maple Caramelized Onions, Dill Pickle Aioli, and Steak Fries	35	1	1	vegetarian	d7991adcb5
-242	Creamy Spinach and Artichoke Pasta\nwith Parmesan and cavatappi	50	1	1	vegetarian	5ad1abbe9f
-268	Crispy Pan-Fried Penne Pasta\nwith arrabiata sauce and Caesar salad	35	2	2	vegetarian	952be8512a
-257	Flavors of Buffalo Bleu Cheese Chicken Breast\nwith Buffalo cauliflower and arugula salad	45	1	2	poultry	50205e937a
-269	Goat Cheese and Herb-Crusted Pork Chop\nwith lemon and garlic roasted broccoli	35	1	0	pork	9a2adf62d3
-265	Green Goddess Pan-Seared Chicken\nWith Fresh Herb Pasta Salad	35	1	1	poultry	2e4cf3a4b1
-254	Hacienda Tortilla Stacks \nwith avocado, black beans, corn, and sour cream	40	2	1	vegetarian	231e7be32d
-232	Harissa-Rubbed Moroccan Chicken \nWith Carrot Puree and Orange Reduction	35	1	1	poultry	270ec61258
-267	Healthy Takeout Cashew Pork\nWith Jasmine Rice	40	1	0	pork	5b52a3d1d5
-214	Healthy Takeout Sesame Noodles\nWith Lemongrass-Ginger Mushrooms and Red Cabbage	35	1	0	vegetarian	6fe336e87d
-247	Honey-Rosemary Chicken\nWith Bleu Cheese, Kale, and Citrus Salad	35	1	1	poultry	4a8e8fdf03
-218	Hot Honey Salmon\nwith zucchini and tomatoes	35	2	1	seafood	253b8809c7
-222	Huli Huli Chicken Thighs\nwith jasmine rice and spicy beans	35	1	2	poultry	607a36f66e
-219	Lasagna Bianca\nwith cremini mushrooms and spinach	55	2	0	vegetarian	b211c4dac1
-241	Lemon-Braised Chicken \nWith Zucchini and Yellow Squash Tian	40	2	0	poultry	870f267e93
-260	Moroccan Spiced Chicken\nwith broiled eggplant, roasted Roma tomatoes, and garlic sauce	45	2	1	poultry	d1a009a3db
-278	Mother's Day Brunch: Smoked Salmon, Roasted Red Pepper, and Mascarpone Croissant\nwith pineapple and cucumber mocktail	30	1	0	seafood	56b9f81afb
-217	N'awlins Shrimp Po'Boy\nwith homemade remoulade and romaine salad	35	1	2	seafood	a0f370dddb
-244	Pan-Seared Steak with Garlic-Tomato Sauce\nand crispy Parmesan potato cakes	45	2	0	beef	566e6fd50e
-233	Parisian Bistro Bone-In Chicken\nwith dauphinoise potatoes and Vichy carrots	55	3	0	poultry	e9daf34b79
-215	Peking Portobello Steaks\nWith Almond Wild Rice and Garlic Baby Bok Choy	50	1	1	vegetarian	32ec56526d
-225	Persian Rice with Fava Beans and Pistachios\nWith Fresh Herbs and Lemon	40	1	1	vegetarian	6d970c2cae
-246	Pork Meatball Soup\nWith Fragrant Miso Broth, Bok Choy, and Fresno Chilis	35	1	1	pork	0210041ac7
-264	Quinoa and Roasted Apple Salad\nWith Fennel, Goat Cheese, and Cinnamon Toasted Walnuts	35	1	0	vegetarian	e6aab70925
-262	Roasted Chicken Ala Parmigiana\nWith Sweet Pea Risotto	35	1	1	poultry	3994977fbf
-226	Rosemary Brown Sugar Pork Chops\nWith Roasted Mushrooms and Heirloom Fingerling Potatoes	35	1	1	pork	b4335a7ce4
-227	Rosemary-Potato Wood-Fired Pizza\nWith Chopped Salad	50	1	0	vegetarian	2e262c6efa
-235	Shrimp and Broccoli Alfredo\nwith spaghetti	40	1	0	seafood	194bf16ec4
-252	Sicilian-Style Swordfish Steaks\nWith Cherry Tomato and Caper Relish	35	1	1	seafood	f8d160101a
-238	Sirloin Steak and Blue Cheese Salad\nwith honey-caramelized onions and croutons	35	1	0	beef	b194aba0ab
-239	Sirloin Steak with Sauce Robert\nwith blue cheese-mashed cauliflower	40	1	0	beef	ecfd4f30cd
-274	Sirloin Steak with White Wine Demi-Glace\nand garlic-herb potatoes	40	2	0	beef	ea04a625db
-213	Skinny Chicken Mozzarella\nwith marinara and garlicky greens	35	1	0	poultry	1aa381d9af
-266	Spicy Caramel Apple Pork Chops\nwith thyme-roasted butternut squash	30	1	1	pork	a0c7158d96
-220	Spinach, Egg, and Cheese Waffle Panini\nWith Granola-Strawberry Parfait	35	1	0	vegetarian	8a343b006a
-229	Spring Fettuccine with Asparagus and Lemon Gremolata\nIn a Spicy Cream Sauce with Toasted Almonds	30	1	1	vegetarian	391d52058d
-263	Steak Marsala\nwith Parmesan mash and cremini mushrooms	45	2	0	beef	fbdbd72f6e
-216	Tofu Pad Thai\nwith carrots and sweet chili sauce	40	1	2	vegetarian	e83d60b819
-273	Turkey Chili\nwith kidney beans, sour cream, and cheddar cheese	35	1	1	poultry	cbb6d9f7d7
-256	Whole Wheat Lemon-Cream Spaghetti\nwith pine nuts and raspberry vinaigrette salad	35	1	0	vegetarian	caabb29dd5
-221	Winter Vegetable and Biscuit Pot Pie\nWith Rutabaga, Kale, and Onion Hash	50	2	0	vegetarian	0f1840d22f
-230	Artichoke and Mozzarella Mini Quiches\nwith blistered tomato and spinach salad	35	2	0	vegetarian	65c4e4e9b4
-323	Artichoke and Tomato Flatbread\nwith goat cheese and pepperoncini	35	1	1	vegetarian	2a7390a851
-297	Asparagus and Roasted Red Pepper Risotto\nWith Baby Carrots and Basil	35	2	0	vegetarian	78c2a1d5b2
-312	Blackened Chicken Caesar Salad\nwith crispy shallots	35	2	1	poultry	f1c3261678
-335	Blackened Salmon with Avocado-Corn Salsa\nAnd Black Beans, Jalapeño, and Lime	40	2	2	seafood	c2202a9234
-346	Bone-In Chicken Diane\nwith mashed potatoes and green beans	50	2	0	poultry	f5d9299ba6
-317	Bread Bowl Veggie Chili\nWith Sweet Potatoes, Cheddar, Zucchini, and Chickpeas	50	1	1	vegetarian	c5769de5a7
-293	Buttermilk-Ranch Chicken\nwith mashed carrot and green beans	40	2	0	poultry	a280832696
-288	Cajun Blackened Chicken\nWith Greek Cucumber and Feta Salad	35	1	2	poultry	2c22667eb3
-338	Cajun Chicken Pasta\nwith bell peppers and cheesy breadcrumbs	35	1	2	poultry	83c83d4360
-311	Caramelized Apple Chutney Pork Chop\nwith green beans almondine	40	1	0	pork	488a8ed089
-294	Chicken and Garlic Peanut Sauce\nwith stir-fried broccoli and brown rice	35	1	1	poultry	ce202da4d1
-287	Chicken au Fromage\nwith mushroom-cheese sauce and lemon-broccoli	40	1	0	poultry	8f049341be
-281	Chicken Château with Dijon Demi-Glace\nand herb-roasted root vegetables	40	1	0	poultry	27a407fc70
-327	Chimichurri Steak\nwith roasted potatoes	45	1	1	beef	ee61d1a1b9
-322	Cider-Brined Pork Tenderloin: Serves 2-3 People\nWith Peppercorn Cream Gravy	35	1	1	pork	0dd14cef4a
-289	Classic Chicken Marsala\nwith buttery garlic mushroom sauce	35	1	0	poultry	56808330f8
-324	Curried Couscous with Roasted Chickpeas\nWith Broccoli and Feta Cheese	40	1	1	vegetarian	5bdad707f5
-307	Farmer's Market Japanese Noodles\nWith Sesame-Garlic Mushrooms and Watermelon Radish	35	1	2	vegetarian	d15bfde876
-337	Fennel and Pork Sausage Wood-Fired Pizza\nWith Herbed Ricotta and Honey	35	1	0	pork	a94685383a
-316	Feta- and Herb-Crusted Salmon\nwith lemony orzo	35	1	0	seafood	3799c99447
-304	Fontina and Caramelized Onion Flatbread\nwith arugula and grape tomatoes	45	2	0	vegetarian	d8ddd7920b
-321	Ginger-Marinated Pork Chop\nWith Kung Pao Brussels Sprouts	40	1	2	pork	41a016adaf
-325	Greek Quinoa Grain Bowl\nwith English cucumber, feta, and Sweety Drop peppers	40	1	1	vegetarian	51445a6e3e
-314	Greek Zucchini Quesadillas\nwith tomato and Kalamata olive salsa	45	1	0	vegetarian	786309f722
-309	Green Apple Chicken Curry\nWith Indian Spices and Jasmine Rice	35	1	1	poultry	d20bbbe884
-279	Grilled Honey-Mustard Salmon\nwith fresh tomato-dill relish and asparagus	40	1	0	seafood	04f237ca43
-336	Grilled Pork Chop with Whole Grain Dijon Sauce\nwith red potatoes and green beans	45	1	0	pork	eafd467b02
-300	Grilled Southeast Asian BBQ Chicken\nwith brown rice and zucchini salad	40	1	1	poultry	19fd9f9218
-308	Herb-Crusted Polenta\nWith White Bean Bruschetta, Garlic Zucchini, and Toasted Pine Nuts	35	1	1	vegetarian	96f8e4bfdd
-298	Hot Honey Pork Chop \nwith roasted snow pea-shallot medley	40	1	2	pork	d509241ed4
-320	Japanese Furikake Salmon\nwith fresh snow pea salad and ginger-miso dressing	35	1	0	seafood	6858bd52f7
-283	Kale and Mushroom Gratin\nWith Jasmine Rice, Cashew Cream, and Almond Parmesan	55	1	1	vegetarian	cabb893554
-345	Korean Glazed Chicken\nwith shaved asparagus, carrot, and pear salad	35	1	1	poultry	95fa89a187
-291	Lebanese-Style Mushroom Saute \nWith Lebanese Tomato Salsa, Couscous, and Toasted Almonds	30	1	1	vegetarian	7de0317859
-330	Lemon Tahini Quinoa Bowl\nWith Fresh Seasonal Vegetables	35	1	1	vegetarian	ff906787d3
-328	Loaded Weeknight Nachos \nWith Cashew "Cheese" Sauce, Black Beans, and Jalapeños	35	1	1	vegetarian	19713dbce2
-340	Ma Po Tofu \nWith Jasmine Rice	40	2	3	vegetarian	9e65dc2113
-302	Moroccan Chicken\nWith Citrus Salad and Hazelnuts	35	2	1	poultry	da6a3b1c88
-285	Pan Seared Salmon with Papaya Salsa\nAnd Roasted Asparagus	35	2	2	seafood	e2cba55276
-319	Parmesan Crusted Tilapia\nWith Basil Pesto and Tomato Orzo Pasta Salad	35	1	1	seafood	faf1e3a5f5
-329	Parsley-Caper Pork Medallions\nwith warm cauliflower salad	35	1	0	pork	2004644939
-341	Pesto Chicken Pizza\nwith mozzarella, grape tomatoes, and arugula	40	1	0	poultry	76fc254feb
-290	Pimenton-Herb Butter Sirloin Steak\nWith Sweet Potato-Piquillo Hash	50	1	1	beef	b78ab7a7b3
-342	Pork Chop with Almond Crust\nWith Fennel Apple Salad and Lemon, Dijon and Thyme Vinaigrette	30	2	0	pork	e8a70b4687
-339	Pub-Style Turkey Cheddar Burger\nWith Pickled Onions and Sweet Potato Fries	35	2	1	poultry	25acfae11e
-282	Queso and Frijoles Veggie Tacos\nwith chipotle creamed corn	40	1	2	vegetarian	0b869fbd9a
-332	Quinoa and Roasted Vegetable Salad\nWith Pan Seared Chicken	35	1	1	vegetarian	60140f62df
-334	Rustic Zucchini Flatbreads  \nWith Fresh Hummus and Caramelized Onions	35	1	1	vegetarian	34a35acfb3
-280	Shrimp and Pea Risotto\nwith white wine	40	1	1	seafood	77346266cd
-331	Sirloin Steak with Yukon-Red Pepper Hash\nAnd Mustard-Herb Compound Butter	35	1	0	beef	859a5e00cf
-292	Southwestern Shrimp Salad\nwith poblano peppers and Roma tomatoes	45	1	2	seafood	71835401c2
-296	Steak Wellington\nwith roasted carrots and mushroom demi-glace	55	2	0	beef	b1546c43d0
-284	Three Cheese Ravioli with Tomato Sauce\nWith Zucchini and Parmesan	50	3	0	vegetarian	4d953185b3
-299	Tilapia with Sweet Pea and Ricotta Puree\nWith Roasted Asparagus and Red Onion	35	1	1	seafood	a3b7e5b9fb
-315	Turkey Salisbury Steak with Mushroom Gravy\nwith green beans and cauliflower	40	1	0	poultry	7f80148a34
-347	Venezuelan Asado Negro\nwith roasted vegetables and tostones	40	1	0	beef	1996927a60
-310	Apple Cider-Brined Salmon\nWith a Tarragon-Mustard Cream Sauce and Green Beans	35	1	0	seafood	9f3e860f5b
-409	BBQ Shrimp Pizzas\nwith pico de gallo	35	2	1	seafood	55530dd862
-378	Beef-and-Sherry "Steak Diane"\nwith cremini and Dijon cream sauce, mashed potatoes, and asparagus	50	2	0	beef	3cbe65bc2e
-391	Bombay Stuffed Portobello Mushroom Caps\nWith Mango Mint Cucumber Salad	40	1	1	vegetarian	8ba783bc76
-370	Bone-In Pork Chop with Maple Butter\nwith roasted carrots and broccoli mash	40	1	0	pork	2c81440a9c
-362	Cajun Chicken\nwith cheddar grits and cremini mushrooms	35	1	2	poultry	bf60b5caf0
-353	Cajun Chicken Jambalaya\nWith Creole Rice and Vegetables	35	1	1	poultry	90f4e7fcc4
-402	Chicken Tikka Masala\nWith Chicken Thighs, Basmati Rice, and Garlic Naan	40	1	2	poultry	def0a73ab5
-360	Chicken Vegetable Soup\nWith Kale, Carrots, and Thyme	40	1	1	poultry	0c4e1ae181
-368	Chicken with Basil-Pecorino Cream Sauce\nand roasted red potatoes	50	2	0	poultry	78bd65b644
-375	Chimichurri Pork Chops  \nWith Gaucho-Style Vegetable Sauté	35	1	1	pork	4b483e04e5
-397	Creamy Avocado Pasta\nWith Roasted Pistachios and Basil	35	1	1	vegetarian	4e946a5754
-380	Crispy Onion Chicken\nwith creamy mushroom sauce and green beans	45	2	0	poultry	38c087c110
-394	Farro Salad with Asparagus\nwith Dijon vinaigrette	45	1	0	vegetarian	e252b1a751
-388	Feta and Herb Crusted Salmon\nwith Greek arugula salad	40	1	0	seafood	d33fd7aa80
-381	Goat Cheese Cavatappi Primavera\nwith asparagus, artichokes, and zucchini	35	1	0	vegetarian	c7df9728f1
-414	Grilled Green Tomato Po' Boy\nwith ranch seasoned Yukon chips	40	1	0	vegetarian	8033a43ad1
-365	Healthy Takeout Shrimp Singapore Noodles\nWith Snow Peas and Bell Pepper	40	1	1	seafood	13d3d66a80
-356	Herb-Roasted Chicken\nWith Whipped Cauliflower and Lemon Gremolata	35	1	1	poultry	8f403ad0d8
-410	Homestyle Beef Meatloaf\nWith Turnip Mash and Green Bean Amandine	35	1	1	beef	a73f8e20d7
-371	Honey Mustard Pork Tenderloin\nwith rosemary-roasted green beans and shallot	60	1	0	pork	fbc806a1b3
-382	Indian Roasted Sweet Potato and Puffed Rice Salad\nwith tamarind vinaigrette, cilantro, and watermelon radish	35	2	0	vegetarian	b761528125
-376	Korean BBQ Tofu\nWith Farro Stir Fry	35	1	1	vegetarian	30c2d3fd01
-372	Lemon-Poppy Seed Pork Tenderloin\nWith Apple-Brussels Sprout Hash and Cider Gastrique	35	1	0	pork	88fe31c5d8
-354	Maple Cranberry Bone-in Pork Chop\nwith rosemary Brussels sprouts and turnips	45	2	0	pork	d54fdb288d
-349	Margherita Chicken Breast \nwith Parmesan-cauliflower fritters	45	3	0	poultry	3612f67897
-412	Mushroom Pot Pie\nwith market vegetables and miso gravy	60	3	0	vegetarian	cec25fe0b5
-408	One-Pot Tomato Basil Pasta \nWith Almond Parmesan	30	1	1	vegetarian	98e0852a41
-369	Pan-Roasted Chicken and Artichokes\nWith Brussels Sprouts, Grape Tomatoes, and White Wine Jus	50	1	0	poultry	47cc7b19f1
-399	Pan-Seared Chicken Bruschetta\nWith Heirloom Baby Tomatoes, Parmesan, and Microgreens	40	2	1	poultry	3c3fc32ec4
-355	Pan-Seared Chicken Moutarde\nWith Chervil Gremolata and Smashed Yukon Potatoes	40	1	1	poultry	edac18e9b1
-348	Pan-Seared Chicken Scaloppine\nwith shallot-mushroom cream	35	2	0	poultry	d8bddeed5f
-379	Pan-Seared Flat-Iron Steak\nWith Roasted Winter Vegetable Hash	35	1	1	beef	63372c6bda
-395	Pink-Peppercorn Pork Tenderloin\nWith Peach and Cucumber Salad	50	2	2	pork	998f190f8b
-384	Pork Chop and Cranberry Mostarda\nwith roasted sweet potatoes and Brussels sprouts	35	1	0	pork	fe25cf27dc
-351	Pork Sausage and Parmesan Polenta\nWith Fennel, Bell Pepper, and Tomato Sauté	35	2	0	pork	771922b2b7
-413	Portobello Poblano Tacos\nWith Pan-Refried Black Beans and Lime Crema	50	1	2	vegetarian	e2c577f198
-415	Queso Chicken\nwith roasted broccoli and red peppers	35	1	1	poultry	e5c72a67d1
-416	Red Lentil Soup\nwith berbere oil, lemon, cilantro, and whole wheat pita	40	1	1	vegetarian	3bd99167ca
-366	Roasted Pesto Portobello Burger\nWith Garbanzo Bean, Cucumber, and Red Onion Salad	35	1	1	vegetarian	cdcdeea3a5
-404	Roasted Tomatillo-Poblano Soup\nWith Fresh Tortilla Chips	40	1	1	vegetarian	7d0404e0aa
-385	Shaved Vegetable Salad\nWith Goat Cheese, Walnuts and Sherry Vinaigrette	30	1	1	vegetarian	c15927e652
-389	Sicilian Chicken\nwith green beans and tomatoes pizzaiola	35	1	0	poultry	2b1094c41e
-403	South American Chicken Chupe\nWith Cilantro, Corn, Red Peppers, and Mild Chipotle Cream Sauce	35	1	2	poultry	4f513d04df
-352	Southern Sweet and Spicy Pork Chop\nwith pepper jelly and sautéed vegetables	30	1	2	pork	143cce36ab
-377	Southwestern Tofu Cobb Salad\nWith Quinoa, Black Beans, and Creamy Avocado Dressing	35	1	1	vegetarian	5ecbaa5b2b
-363	Spaghetti with Burrata Cheese\nwith pine nuts, wilted grape tomatoes, and spinach	35	1	0	vegetarian	535af7d56e
-396	Special: Sous Vide Baby Back Ribs\nWith Roasted Brussels Sprout, Red Bell Pepper, and Sweet Potato Salad	35	1	1	pork	dc7281114a
-411	Summer Succotash Grilled Chicken\nWith Yellow Squash and Heirloom Tomatoes	35	1	1	poultry	b8a2b25013
-364	Sunday Supper Pot Roast Steak\nwith mashed potatoes	55	2	0	beef	93209e92a3
-407	Tandoori Roasted Cauliflower\nwith garlic naan and orange salad	45	3	1	vegetarian	a0f2060add
-393	Thai Red Curry Shrimp\nwith jasmine rice and snow peas	35	1	1	seafood	38f999dc30
-392	Tilapia Florentine\nWith Green Beans and Toasted Almonds	40	1	0	seafood	cf93de6dbb
-383	Turkey and Kidney Bean Chili\nWith Jalapeño Cornbread	35	1	1	poultry	1e3c55fdb7
-400	Vietnamese-Style Steak Pho\nWith Rice Vermicelli in a Fragrant Ginger Broth	35	1	1	vegetarian	b8ef3a0e9f
-406	Wood-Fired BBQ Chicken Pizza\nwith caramelized onions and ranch drizzle	45	1	0	poultry	d7cab0472f
-401	Baja Grilled Salmon\nWith Mango-Lime Salsa and Garlicky Spinach	35	1	1	seafood	f895e3c3af
-228	Blue Cheese and Smoked Almond Bone-In Pork Chop\nwith honey-roasted carrots and chives	55	1	0	pork	a658ff05bc
-435	Coconut Jasmine Rice Bowl\nwith fried plantains and corn pico de gallo	45	2	1	vegetarian	2e385f5072
-25	Cornmeal Crusted Tilapia\nWith Tomatillo Salsa and Roasted Sunchokes	35	1	1	seafood	eb55103c3e
-417	Fennel and Thyme Crusted Pork Tenderloin\nWith Oven-Roasted Brussels Sprouts and White Balsamic Peperonata	40	2	0	pork	6db97dfa07
-442	Fig and Goat Cheese Flatbread\nwith walnuts and caramelized onions	45	2	0	vegetarian	4f4c943db7
-47	Friendsgiving Side Trio\nwith apple herb stuffing, pecorino-garlic mashed potatoes, and cranberry-almond green beans	60	2	0	vegetarian	7fcdb34825
-373	Greek Bone-In Chicken with Roasted Vegetables\nwith homemade tzatziki sauce and lemon	40	1	0	poultry	cffbd28f35
-431	Korean Bi Bim Bop\nWith Kimchi, Pickled Vegetables, and Marinated Eggplant	35	1	1	vegetarian	721f28bde7
-434	Lemon-Chicken Paillard\nWith Spinach and Parmesan Salad	35	1	1	poultry	4bd11c2abc
-133	Mediterranean Chicken Pita\nWith Turmeric Rice and Cool Garlic Yogurt Sauce	35	1	1	poultry	ea114c7b80
-205	Mini Mushroom and Onion Pecan Quiches\nWith Arugula Salad and French Mustard Vinaigrette	40	1	1	vegetarian	fa322a7f4c
-305	New England-Style Fish Cakes\nwith romaine and tomato salad	45	2	0	seafood	6527266457
-386	Penne Pasta with Sun-Dried Tomato Cream\nwith cremini mushrooms, spinach, and Parmesan	35	1	1	vegetarian	2c7f29997b
-344	Pork Chop Santorini with Sweety Drop-Kalamata Butter \nand cucumber salad	40	1	1	pork	c7bf0421ec
-144	Raspberry Chipotle BBQ Chicken\nWith Baby Arugula and Onion Salad	35	1	1	poultry	ca5e01a4cb
-430	Shrimp Pad Thai\nwith carrots, roasted peanuts, and cilantro	30	2	2	seafood	c1a73dddde
-422	Spring Noodle Salad\nwith roasted vegetables and strawberry vinaigrette	35	1	0	vegetarian	75f8ae05b6
-427	Swiss and Asparagus Stuffed Chicken\nwith sautéed zucchini and robusto tomato sauce	45	2	0	poultry	709133698c
-423	Texas-Style Corn Chip Pie\nWith Tomatoes, Black Beans, and Home-made Corn Chips	35	2	2	vegetarian	6c6940e30d
-425	Thai Ginger-Garlic Grilled Pork Chops\nWith Kaffir Lime and Cucumber Relish	35	1	1	pork	b942e5eb13
-420	Tofu Carnitas Burrito Bowl\nWith Cilantro Brown Rice, Black Beans, and Watermelon Radishes	35	1	2	vegetarian	4741ca4bdc
-437	Tropical Quinoa Tabbouleh\nWith Kale, Toasted Cashews, and a Maple-Lime Dressing	35	1	1	vegetarian	08ab1dcd04
-439	Vegan Fettucini Alfredo\nWith Basil and Sautéed Garlic Mushrooms	35	1	1	vegetarian	4db187c679
-441	Spicy Cajun Shrimp and Cheddar Grits\nwith roasted peppers and mushrooms	35	1	1	seafood	34439cc4e5
-165	Acapulco Steak Tacos\nwith pico de gallo and queso fresco	40	1	2	beef	ff59e1eaad
-66	Agave-Ginger Glazed Salmon  \nWith Edamame Mash, Charred Bok Choy, and Orange	35	2	1	seafood	84141cf001
-326	Alabama-Style BBQ Pork Tenderloin\nWith Green Beans and Fresh Jalapeño Cornbread	50	1	1	pork	7df8233909
-95	Alsatian Pizza\nwith caramelized onions, Swiss cheese, and arugula	45	1	0	vegetarian	a02bdc7989
-333	Artichoke and Roasted Red Pepper Paella \nWith Saffron Scented Arborio Rice	35	2	0	vegetarian	f9849dcd6e
-418	BBQ Gouda Juicy Lucy\nwith cheesy center and macaroni salad	40	2	0	beef	ab5a0c658f
-14	Bone-In Pork Chop with Hazelnut Gremolata\nwith roasted asparagus, yellow squash, and lemon-caper aioli	35	1	0	pork	5971d10af8
-211	Broccoli and Cheddar Pizza\nwith red bell pepper and red onion	40	1	0	vegetarian	342d06e160
-286	Butternut Squash and Walnut Flatbread\nWith Ricotta, Pomegranate Glaze, and Bleu Cheese	35	1	1	vegetarian	1f55e6fae4
-243	Calzone with Broccoli, Red Peppers, and Mushrooms\nwith marinara dipping sauce	55	3	0	vegetarian	da9ece27bc
-119	Cheddar-Stuffed Turkey Meatballs\nwith maple-BBQ sauce and ranch salad	30	1	0	poultry	901ff60dc1
-166	Chicken Breast a la Brasa\nwith sweet potato fries and jalapeño-garlic dipping sauce	45	1	2	poultry	b4f21dfc53
-358	Chicken Breast with Saffron Beurre Blanc\nwith roasted Brussels sprouts and red pepper	35	1	0	poultry	b88d161c96
-421	Classic French Green Peppercorn Pork Tenderloin\nwith mashed carrots and roasted asparagus	35	2	0	pork	80bc0a130a
-429	Farmhouse Fried Chicken\nwith mashed potatoes, green onion gravy, and corn	40	3	0	poultry	27e251a3b2
-69	Gardein Vegetarian Rigatoni Bolognese\nWith Robust Tomato Sauce and Fresh Basil	35	1	1	vegetarian	fce8a3c8c2
-433	Gnocchi in Truffled Parmesan Cream\nwith cremini mushrooms and sun-dried tomatoes	30	1	0	vegetarian	4a6eda1d3c
-178	Grilled Chicken with Garlic and Herb Wasakaka Sauce\nwith sweet potatoes and cucumber salad	55	1	1	poultry	d4a4adde44
-249	Grilled Montreal Chicken Breast\nwith roasted hot honey sweet potatoes and snow peas	40	1	2	poultry	f381b7fd34
-318	Healthy Takeout Sweet and Sour Chicken\nwith brown rice and green bell pepper	40	1	0	poultry	1f582d5288
-440	Honey-Roasted Chicken Thighs\nWith Sweet Potato Wedges and Cucumber Salad	35	1	1	poultry	84fc5c7321
-428	Mesquite Chicken\nwith loaded potato wedges	45	2	1	poultry	cc12403414
-359	Miso Vegetable Ramen\nWith Radish Sprouts, Oyster Mushrooms, and Sambal	35	1	1	vegetarian	50bb1b87d6
-419	Neapolitan Pizza Margherita\nwith arugula salad	35	1	1	vegetarian	d56cb7091c
-58	Pan-Seared Swordfish\nWith Tangerine and Jalapeño Salsa and Jasmine Rice	35	1	1	seafood	ef8911062d
-426	Pappardelle with Chicken and Wild Mushroom Ragù\nWith Rosemary, Balsamic, and Parmesan	35	1	1	poultry	205a853a71
-112	Pesto and Sun-Dried Tomato Stuffed Chicken Breast\nWith Cauliflower Mash and Garlic Kale	40	2	1	poultry	7e2e70d456
-436	Pesto Shrimp and Pecorino Grits\nwith mushrooms and grape tomatoes	35	1	0	seafood	55d245613c
-438	Quinoa Sweet Potato Burger\non an English muffin	45	2	0	vegetarian	f6e83354dd
-424	Roasted Pork Tenderloin and Soba Noodle Bowl\nWith Teriyaki Broth	35	1	1	pork	fe5fbde319
-237	Acapulco Beef Burger\nwith fresh pico de gallo and cilantro-lime fries	55	2	1	beef	5eea0bbcf9
-93	Apricot Glazed Pork Medallions\nWith Roasted Coriander Carrots and Creamy Tahini Swiss Chard	40	2	2	pork	b4f19695f3
-361	Aztec-Style Red Beans and Rice\nWith Pineapple Guacamole, Housemade Tortilla Chips, and Toasted Pepitas	35	2	1	vegetarian	fae787b619
-374	BBQ Summer Salmon\nWith Snap Pea and Fennel Slaw	35	2	0	seafood	715c2cd0ca
-5	Braised Pork Belly Tacos\nWith Homemade Pico de Gallo and Cilantro-Lime Rice	30	1	1	pork	c7e8daa9c7
-301	Turkey Sausage & Sun-Dried Tomato Sandwich\nWith Fennel, Swiss Cheese, and Roasted Potatoes	40	2	1	poultry	bd5d38ec9e
-398	Catalan-Style Portobello Steaks\nWith Patatas Bravas Purple Potatoes	35	1	1	vegetarian	5659925295
-271	Cauliflower Crust Summer Vegetable Pizza\nWith Fresh Almond Pesto, Heirloom Tomatoes, Arugula, and Shaved Spring Onion	55	1	1	vegetarian	529ca47b6a
-201	Charred Poblano Chimichurri Flat Iron Steak\nWith Orange Caramelized Green Beans and Radish Salad	40	2	2	beef	befa332142
-343	Crispy Chicken Provençal\nWith a Niçoise Olive and Tomato Pan Sauce and Arugula Salad with Champagne Vinaigrette	40	1	0	poultry	0c566c8217
-33	Crispy Chickpea Gnocchi  \nWith Red Pepper Cream Sauce and Toasted Walnuts	40	1	1	vegetarian	83efff0464
-303	Family Meal: Friendsgiving: Quick and Easy Turkey Meatballs and White Cheddar Mash\nwith green beans and cranberry sauce	50	2	0	poultry	7ebcfef5a8
-80	Greek-Style Pork Tenderloin\nWith Lemon-Herb Rub, Zucchini, and Bell Pepper Sauté	50	2	1	pork	54576f142b
-350	Green Tea Poached Salmon\nWith Vermicelli Noodles and Chili Cucumber Vinaigrette	35	1	1	seafood	d3bff0c9ba
-177	Grilled Romaine Chicken Salad\nWith Homemade Gorgonzola Scallion Dressing	35	1	1	poultry	e254153094
-64	Italian Stuffed Zucchini\nWith Sicilian Herbs and Basil Lemon Tahini Sauce	35	1	1	vegetarian	2938623cf9
-277	Kale and White Bean Stew\nWith Cannellini Beans, White Wine, and Thyme	35	1	1	vegetarian	600a0810c4
-240	Market Vegetable Alfredo Pasta\nWith Roasted Asparagus, Red Bell Pepper, and Carrots	35	1	0	vegetarian	e3cb4dfa41
-204	One Pan Farfalle with Roasted Red Pepper\nWith Spinach, Kalamata Olives, and Parmesan	30	1	0	vegetarian	476c5cc7cc
-390	Pan-Fried Sole with White Wine Butter Sauce\nWith Fresh Lemon and Roasted French Vegetable Medley	35	2	0	seafood	4b475ed2f9
-306	Pan Roasted Pork Tenderloin\nWith Orzo, Cherry Tomato, Charred Lemon and Baby Arugula	35	1	1	pork	cd7a9dac87
-127	Pan-Seared Pork Chop with Fennel-Honey Butter\nwith au gratin turnips and Swiss chard	40	1	0	pork	c723d2cbff
-224	Piedmont Chicken Breast\nwith fresh mozzarella, pesto, and balsamic reduction caprese salad	40	1	0	poultry	51e3662ac6
-272	Red, White, and Blue Smoothies \nWith Cherries, Blueberries, Honey, and Greek Yogurt	10	1	0	vegetarian	d22c42f6e5
-3	Roasted Eggplant Salad\nwith lemon-tahini dressing, goat cheese, and smoked almonds	35	1	0	vegetarian	44d4472922
-367	Roasted Vegetable Panini\nwith romaine-arugula salad in balsamic-Dijon dressing	35	1	0	vegetarian	027cf3225e
-9	Sage and Brown Butter Pumpkin Gnocchi\nWith Kale and Sweet and Spicy Candied Walnuts	35	1	1	vegetarian	5386378a69
-72	Salmon Crusted with "Everything Bagel" Seasoning\nwith chive sour cream, arugula salad, and lemon-caper vinaigrette	35	1	1	seafood	196dfe75af
-432	Seared Sirloin and Miso-Chive Compound Butter\nWith Wasabi Mashed Potatoes and Green Beans	50	2	2	beef	d484cf4817
-196	Shrimp Cocktail Appetizer: Serves 3-4 People\nWith Horseradish Cocktail Sauce and Lemon	30	1	1	seafood	5afa5284ad
-387	Sicilian-Style Capellini\nWith Roasted Purple Cauliflower and Lemon Caper Sauce	35	1	1	vegetarian	3752c205d2
-70	Sirloin Steak and Fondant Potatoes\nWith Chive-Horseradish Sauce, Roasted Red Pepper, and Brussels	40	1	0	beef	a147794a62
-313	Smoky Char-Grilled Pork Loin Chops \nWith Shaved Brussels Sprout Salad, Pistachios, and Dijon Vinaigrette	35	1	1	pork	93283ccf1a
-202	Smoky Tofu Club Sandwich\nWith Pimenton Aioli, Caramelized Onions, and Garlic Potato Wedges	50	1	0	vegetarian	7503265efe
-248	Spanish Vegetable Paella\nWith Shiitake Mushrooms, Artichokes, and Saffron	40	1	1	vegetarian	6f057bb377
-295	Spice Rubbed Bone-In Pork Chop\nWith Cannellini Bean, Kale, Mushroom, and Bell Pepper Succotash	35	1	1	pork	1f4f25c601
-63	Sundried Tomato Fettuccine Alfredo  \nWith a Dairy-Free Garlic Cream Sauce, Basil, and Lemon Zest	30	1	1	vegetarian	fcf0e59dc6
-20	Swedish-Style Hasselback Potatoes\nWith Caramelized Onions and Dijon-Dressed Salad	50	1	1	vegetarian	6f23fd1a93
-405	Sweet Tomato Cream Rigatoni \nWith Ricotta, Asiago, and Fresh Basil	35	1	1	vegetarian	4984448458
-79	Tropical Greens Summer Salad\nWith Toasted Cashews and a Creamy Grilled Lime Vinaigrette	30	1	1	vegetarian	0d2d7a6a3f
-142	Truffled Grilled Cheese with Tomato Soup\nWith Swiss and Cheddar on Sourdough	35	1	0	vegetarian	e74ba4490f
-261	Turkey Stuffed Acorn Squash\nWith Black Beans, Southwestern Spices, and Mexican Cheese	35	1	1	poultry	628ec3f1f8
-357	Veggie Lo Mein\nWith Edamame, Shiitake Mushrooms, and Sugar Snap Peas	35	1	0	vegetarian	b1b532ef5a
-89	White Wine Chicken Scaloppine\nwith roasted asparagus and carrots	45	2	0	poultry	cb2d729294
-270	Whole Wheat Couscous, Roasted Fennel, and Dried Cherry Salad\nwith coriander almonds, kale, and carrots	35	1	0	vegetarian	0e20d6769c
+COPY public.recipes (id, title, prep_time, difficulty, spice_level, category, image, servings) FROM stdin;
+45	Baked Pesto Pasta\nwith eggplant and sun-dried tomatoes	50	2	0	vegetarian	eb3bf2d91f	2
+18	Beef & Poblano Tamale Pie\nwith cornbread-cheddar crust	55	1	1	beef	14b68e504f	2
+2	Brown Butter Shrimp\nwith smoked Gouda grits	35	1	1	seafood	a6a15f1830	2
+34	Brown Butter Shrimp and Arugula Salad\nwith smoked Gouda grits	35	1	1	seafood	2397ffd566	2
+28	Calypso Chicken\nwith pineapple-red pepper salsa and charred cilantro-lime cauliflower	45	1	0	poultry	f3967fcac1	2
+21	Cauliflower "Risotto"\nWith Sun-Dried Tomatoes & Peas	35	2	0	vegetarian	2e2b3532d0	2
+67	Chicken Scaloppine with Mustard Cream Sauce\nwith sautéed mushrooms and squash fideos	45	2	0	poultry	e5425ac41c	2
+68	Chimichurri Sirloin Steak \nWith Goat Cheese & Grilled Vegetables	35	1	1	beef	32c333ef73	2
+4	Classic Chicken Piccata\nwith angel hair pasta and lemon-caper sauce	35	2	0	poultry	9720da9d1d	2
+6	Clementine and Hot Honey Chicken\nwith sunchokes and balsamic jus	40	1	2	poultry	aae23b533a	2
+52	Coffee-Rubbed Pork Tenderloin\nwith honey-roasted root vegetables	45	1	0	pork	aaa676fe2c	2
+61	Crispy Skin-on Chicken with Steakhouse Mushrooms\nand garlicky spinach	45	1	0	poultry	660c7623d7	2
+10	Curried Lentil Bisque\nWith Coconut Milk, Cilantro, and Toasted Pepitas	40	1	1	vegetarian	d0b2464662	2
+57	Double Decker Poblano Tostadas \nWith Spanish Rice	40	1	1	vegetarian	6bc5ef4dde	2
+19	Farmstand Salad\nWith Goat Cheese, Apple, and Farro	35	1	0	vegetarian	c61d13fa4b	2
+11	Fresh Summer Gazpacho\nWith Cucumber, Grape Tomatoes and Corn	30	1	1	vegetarian	ad47aa9e8c	2
+41	Grilled Chicken with Charred Romaine \nWith a Tarragon-Champagne Vinaigrette	35	1	1	poultry	05f3aa7d54	2
+51	Grilled Pesto Flatbreads\nwith balsamic-feta tomato salad	35	1	0	vegetarian	e5cb47f620	2
+54	Healthy Takeout Bourbon Chicken\nWith Chicken Thighs, Water Chestnuts, Broccoli, and Jasmine Rice	35	1	1	poultry	54fd86109f	2
+29	Healthy Takeout Kung Pao Shrimp\nWith Three Peppers, Honey Roasted Peanuts, and Brown Rice	30	1	2	seafood	c4c71254cd	2
+24	Italian Chicken Vesuvio\nWith Peas and Potato Wedges in a Lemon-Butter Sauce	35	1	1	poultry	9614e6e5f9	2
+53	Italian Pork Chop\nWith Mozzarella Baked Tomatoes and Green Beans	35	2	2	pork	82fae5a6b6	2
+48	Italian Sausage Stromboli\nwith spinach-mozzarella filling and marinara dipping sauce	60	3	1	pork	2c0d00e22a	2
+60	Japanese-Style Jasmine Rice Turkey Meatballs\nWith Stir Fried Baby Bok Choy	35	1	1	poultry	a9d339825f	2
+50	Maple-Glazed Pork Tenderloin\nwith Brussels sprouts	45	2	0	pork	56c9aa6a84	2
+56	Maple-Miso Glazed Salmon \nwith roasted Brussels and apples	35	1	0	seafood	167e2f4837	2
+44	Mediterranean Chickpea Fritters \nWith Herbed Quinoa and Tzatziki Sauce	35	1	1	vegetarian	17382b05e3	2
+43	Mushroom-Spinach Lasagna Rolls\nwith ricotta and mozzarella cheeses	50	1	1	vegetarian	039fb2efe4	2
+35	New England Cod Chowder\nwith garlic-parsley croutons	45	1	0	seafood	95cec5352c	2
+32	Pasta e Fagioli Soup\nWith White Beans and Italian Seasonings	35	2	2	vegetarian	e5af24bb4d	2
+17	Pork Chop with Candied Walnut Butter\nand Parmesan-roasted acorn squash	40	2	0	pork	8bf0991103	2
+1	Pork Shumai Meatballs\nwith ponzu dipping sauce and snap peas	35	2	0	pork	bea03ec811	2
+62	Portuguese Truffled Spaghetti\nWith Chickpeas, Pimentão, and Mushrooms	35	1	1	vegetarian	e434b0db80	2
+23	Pumpkin Gnocchi in Sage-Brown Butter Cream\nWith Candied Pecans, Sun-Dried Tomatoes, and Bleu Cheese	40	3	0	vegetarian	db72c7cc69	2
+27	Rigatoni with Sweet Pea Pesto  \nWith Fresh Basil, Mint, and Toasted Pine Nuts	35	1	1	vegetarian	e50c5dda02	2
+46	Salmon in Lemongrass-Ginger Broth\nWith Bok Choy and Shiitakes	50	2	3	seafood	956c4c8b08	2
+49	San Francisco-Style Shrimp Cioppino\nWith Spiced Tomato and White Wine Broth	35	2	2	seafood	493f10d7be	2
+30	Sherry Wine Demi-Glace Sirloin Steak\nwith mashed potatoes and balsamic Brussels sprouts	45	2	0	beef	c1682665b0	2
+13	Shrimp and Sweet Pea Risotto\nwith sun-dried tomatoes and Parmesan	40	2	0	seafood	fe7c36e729	2
+42	Shrimp Fra Diavolo\nWith Linguine and Robust Chile Flake Tomato Sauce	35	1	2	seafood	a93f19cd3a	2
+39	Sicilian-Style Turkey Meatballs\nWith Creamy Polenta and Tomato Ragout	35	1	1	poultry	3fbc1b8196	2
+59	Sirloin Steak with Blue Cheese Compound Butter\nwith green beans and roasted fingerling potatoes	50	3	0	beef	e075232ecd	2
+22	Southwestern Pan-Seared Chicken\nWith Sweet Potato and Black Bean Salsa	35	1	1	poultry	716920f4dd	2
+15	Spaghetti alla Puttanesca\nwith roasted red peppers, artichoke hearts, olives, and capers	35	1	1	vegetarian	9d8c89bf6f	2
+36	Spanish-Style Green Olive Linguine\nWith Capers, Lemon Zest, and Toasted Pine Nuts	35	2	2	vegetarian	8d43d633b9	2
+65	Spinach-Artichoke Chicken\nwith roasted broccoli and radishes	40	1	0	poultry	83ed1925ed	2
+12	Sweet Potato and Wheat Berry Buddha Bowl\nwith kale chips and tahini turmeric dressing	40	1	0	vegetarian	a15517f24f	2
+38	Tamarind Shrimp with Coconut Curry\nwith jasmine rice and zucchini	35	1	1	seafood	a8344781f7	2
+16	Tex-Mex Turkey Taco Salad\nwith corn and tomatoes	30	1	0	poultry	e52faff4df	2
+7	Texas-Style Steak on Toast\nwith smashed red potatoes and red onion gravy	40	2	0	beef	235d2d311e	2
+26	Tonkatsu Salmon\nwith miso-ginger vegetable medley	40	1	0	seafood	f98d765435	2
+8	Truffled Demi-Glace Sirloin Steak\nwith lyonnaise potatoes and peas	40	1	0	beef	e008c42680	2
+40	Truffled Three Cheese Flatbread\nwith grape tomatoes and arugula	30	1	0	vegetarian	247c9ffe45	2
+31	Turkey Tetrazzini with Squash "Fideos"\nWith Crispy Shallot Topping	40	1	0	poultry	8e9996b7ae	2
+37	Vegetable Quesadillas\nWith Oaxacan Cheese, Black Beans, and Chipotle Crema	35	2	2	vegetarian	4084ab2345	2
+55	Amaranth Bowl\nwith green beans, tomatoes, arugula, and Parmesan cheese	40	2	0	vegetarian	1dd7465ab5	2
+135	Argentine Flat Iron Steak\nwith salsa criolla and crispy potatoes	40	1	0	beef	05ab36ef99	2
+78	Beef Meatball and Mushroom Polenta\nWith Rich Porcini Ragout and Asiago Cheese	35	1	1	beef	162ea7c842	2
+99	Bone-In Pork Chop with Parsley-Garlic Butter\nwith spicy peas and carrots	45	1	1	pork	acff84da96	2
+94	Butternut Squash Quesadillas\nWith Black Bean Soup and Colby-Jack Cheese	35	1	1	vegetarian	185f658ae0	2
+82	Chayote Squash Enchiladas Verdes\nwith poblano pepper and Oaxacan cheese	40	1	2	vegetarian	9faa307cdd	2
+114	Chicken and Brown Rice Burrito Bowl\nWith Salsa and Homemade Guacamole	35	1	0	poultry	eef323c6ae	2
+103	Chicken Pad Thai\nwith carrots, roasted peanuts, and cilantro	35	1	2	poultry	30b1fdc1dd	2
+108	Chicken Quinoa Pilaf\nWith Oven-Roasted Chicken and Garden Vegetables	35	1	1	poultry	93bdd18bc3	2
+116	Chicken with Burrata Cheese, Charred Tomatoes, and Ciabatta Garlic Bread\nwith roasted vegetables	50	1	0	poultry	06b87905c3	2
+121	Chili Rellenos Tacos\nWith Garlic Black Beans	35	1	2	vegetarian	2fb89fbffe	2
+101	Classic Shrimp with Lobster Sauce\nWith Broccolini and Jasmine Rice	35	1	1	seafood	3ab300afe2	2
+130	Cremini Mushroom Barley Bowl\nWith Pickled Shiitake Mushrooms	35	2	0	vegetarian	337246681c	2
+98	Enchilada Turkey-Stuffed Pepper Trio\nWith Melted Cheese and Cilantro	45	1	2	poultry	3c9d9ef914	2
+87	Garlic and Lemon-Crusted Salmon\nwith creamed kale and charred tomatoes	45	2	0	seafood	dcaabb34a1	2
+97	Glazed Squash and Quinoa Bowl\nwith sautéed kale and shallots	45	1	2	vegetarian	627773ee7b	2
+122	Green Machine Chicken Salad\nWith Tarragon and Lemon Vinaigrette	40	1	1	poultry	bd493fd57e	2
+73	Grilled Chicken and Pear Salad\nwith goat cheese, walnuts, and balsamic onions	35	1	0	poultry	d79fc244da	2
+81	Healthy Takeout Szechuan Chicken and Green Beans\nwith brown rice and water chestnuts	45	1	2	poultry	ca0fac16d9	2
+77	Honey-Garlic Chicken\nWith Parmesan Vegetable Medley	35	1	0	poultry	e41c6ea46e	2
+126	Jumbo Tofu Ricotta Stuffed Shells \nWith Fresh Herb Tomato Sauce	50	1	1	vegetarian	66cbe9234c	2
+124	Kung Pao Chicken\nWith Dried Chilies, Peanuts, and Green Onions	35	1	1	poultry	858c91421c	2
+74	Miso Lemongrass Seared Chicken\nwith sesame-soy red peppers and broccolini	40	1	0	poultry	04f0c5dc6c	2
+110	Mongolian Beef\nand roasted broccoli	35	1	1	beef	e1b8819e86	2
+109	Moroccan Fish Chermoula\nWith Shaved Cucumber Salad	40	1	1	seafood	e50a4b3912	2
+71	North Indian Aloo Tikki\nCrispy Potato Cakes with Pineapple-Mint Chutney	35	1	1	vegetarian	a920b955b4	2
+102	Oktoberfest Pork Medallions\nwith smashed potatoes and roasted Brussels sprouts	50	1	1	pork	0887cc8e61	2
+104	Old Bay Grilled Chicken and Zucchini Sauté\nwith kale and aioli	35	1	0	poultry	cdcf19cba6	2
+111	One-Skillet Sherry Chicken\nWith Carrots, Rutabagas, and Chard	35	1	0	poultry	d0b9232534	2
+128	Parisian Bistro Steak\nwith dauphinoise potatoes and green beans	55	2	0	beef	1854bb09e2	2
+137	Pomegranate Glazed Drumsticks\nWith Cucumber Salad and Green Beans	40	1	1	poultry	18232fc109	2
+90	Pork Chop alla Pizzaiola\nwith roasted summer squash	45	1	0	pork	eba81fc509	2
+96	Pork Chop Châteaubriand\nwith duchess potatoes and roasted carrots	50	1	0	pork	f714b1089e	2
+117	Pretzel-Crusted Chicken Breast \nWith Grainy Mustard and Sharp Cheddar Sauce	40	1	1	poultry	9c32aafe66	2
+92	Roasted Tilapia Poblano\nWith Fresh Salsa and Braised Kale	40	1	1	seafood	6d9c550bfc	2
+123	Rosemary-Cider Chicken\nwith roasted apples and butternut squash	40	1	0	poultry	ab2f75649f	2
+132	Salisbury Steak\nwith whipped potatoes, asparagus, and sherry-mushroom gravy	55	2	0	beef	9f00a0ac7b	2
+75	Sesame-Crusted Chicken over Butter Lettuce Salad\nWith Lime-Ginger Dressing	30	1	0	poultry	2f7fc0463d	2
+134	Shrimp Jambalaya \nWith Okra, Peas, and Roasted Red Peppers	40	1	2	seafood	2111286855	2
+105	Shrimp Scampi\nwith cheesy pull-apart bread	35	1	1	seafood	51ac0226e9	2
+125	Sirloin Steak and Fines Herbes Butter\nwith garlic, potato, and red pepper hash	50	1	0	beef	f8445bed82	2
+86	Sirloin Steak with Brown Butter Bordelaise\nwith Brussels sprouts and roasted potatoes	45	1	0	beef	2f7b90ed1a	2
+120	Skillet Chicken Chasseur\nwith mushrooms and white wine	40	1	0	poultry	855089fc78	2
+106	Soho Steak\nwith crispy Parmesan potatoes and mushrooms	45	1	0	beef	1ad52f528d	2
+107	Southern Pimento Grilled Cheese\nwith kale salad	35	1	1	vegetarian	27c68a6297	2
+100	Southern-Style Shrimp and Grits\nWith Cheddar, Jalapeño, Green Onions, and Smoked Paprika	35	1	1	seafood	16ca13f617	2
+131	Spinach and Ricotta Stuffed Chicken Breasts\nWith Zucchini and Yellow Squash Ribbons	35	2	1	poultry	421d6f9d3b	2
+88	Sticky Sesame Chicken\nWith Citrus Kale Salad	35	1	0	poultry	4c135d9e86	2
+85	Summer Seared Salmon\nWith Sugar Snap Pea and Fennel Slaw	35	1	1	seafood	a857565d04	2
+118	Sweet Chili Chicken Lettuce Wraps\nwith radishes, green onions, and water chestnuts	30	1	2	poultry	3f7c8bf5f0	2
+83	Swiss-Style Potato and Leek Rösti\nWith Chickpea, Carrot, and Coriander Salad	35	1	1	vegetarian	a55abcc59c	2
+76	Tandoori Chicken\nWith Turmeric Rice and Cucumber-Tomato Sambal	50	1	2	poultry	fac77b66d0	2
+136	Truffled Golden Beet Risotto\nwith cremini mushrooms, asparagus, and goat cheese	50	2	0	vegetarian	121c65e23f	2
+91	Truffled Mushroom Risotto\nwith fresh herbs and cracked peppercorns	50	1	1	vegetarian	3917bb1412	2
+115	Turkey and Goat Cheese Meatballs\nWith Pesto Spaghetti and Baby Arugula	50	2	1	poultry	6d1bdaaf5c	2
+113	Turkey-Stuffed Swiss Chard\nWith Tomato Ragout, Thyme, and Parmesan Cheese	35	1	1	poultry	e91db17d17	2
+129	Tuscan Pork Chops\nWith Bleu Cheese Polenta and Tomato Pan Sauce	40	1	0	pork	6affca24db	2
+84	Weeknight Chicken Quesadillas\nwith Oaxacan cheese and pico de gallo	55	2	2	poultry	d29a4f2616	2
+174	Blackened Chicken Salad\nWith Cracked Pepper Buttermilk Dressing	40	1	2	poultry	8e455b0ed3	2
+157	Bucatini all’Amatriciana\nwith prosciutto and pecorino garlic bread	40	1	2	pork	d5c7a11f6e	2
+210	Butter Chicken\nwith chicken thighs, basmati rice, fresh jalapeño, and curried tomato sauce	35	1	2	poultry	e51ac0197d	2
+145	Caesar Salad Pizza\nwith portobello mushrooms and mozzarella	30	2	0	vegetarian	d598a69029	2
+206	Caramelized Onion and Apple Ciabatta\nwith Swiss cheese and Caesar salad	40	2	0	vegetarian	f1b6618c46	2
+155	Chicken and Roasted Beet Salad\nwith goat cheese and pistachios	40	1	0	poultry	bcdbdada02	2
+183	Chili-Lime Salmon\nwith roasted chayote squash and mojo de ajo	50	1	0	seafood	ee334a511a	2
+138	Chinese BBQ Pork\nWith Egg Drop Soup and Broccoli	35	2	0	pork	409c4c32ef	2
+199	Chipotle Chicken with Cheddar Buttermilk Dumplings\nWith Stewed Carrots and Peas	40	2	2	poultry	066de068a3	2
+194	Coffee-Rubbed Steak\nwith brown butter mashed potatoes and roasted carrots	45	2	0	beef	9939a1c407	2
+198	Coq au Vin with Bone-In Chicken\nwith mashed potatoes	50	2	0	poultry	1adc13adc3	2
+173	Crispy Rice Pork Chop\nwith charred blue cheese broccoli	35	2	0	pork	eab846b8ab	2
+200	Fall Risotto\nwith roasted butternut squash, shallot, and walnuts	50	2	0	vegetarian	075d018d34	2
+181	Fig-Glazed Pork Tenderloin\nwith roasted Brussels sprouts and carrots	45	1	0	pork	49f578f0d8	2
+141	Five-Spice Turkey Soup & Salad\nWith Ginger, Cilantro, and Mint	40	1	1	poultry	0d98b81b61	2
+203	French Toast and Bacon Monte Cristo\nwith provolone and raspberry preserves	45	1	0	pork	53087677c9	2
+143	Grilled Chicken with Cherry Chimichurri\nwith summer vegetables	40	1	0	poultry	1f4c26b6a9	2
+188	Harissa Grilled Chicken\nWith Arugula, Feta, Heirloom Tomato, and Green Bean Salad	35	2	2	poultry	90177b7d10	2
+170	Healthy Takeout: Shrimp and Pineapple Fried Rice\nWith Toasted Cashews and Peas	35	2	1	seafood	65e3c372fc	2
+160	Herbes de Provence Pork Tenderloin\nWith Zucchini and Yellow Squash	35	1	0	pork	f1d79d6a1d	2
+176	Hoisin-Glazed Salmon\nWith Radish-Cucumber Orange Salad	30	1	1	seafood	60f00eb106	2
+195	Honey Butter Fried Chicken\nwith green beans and biscuits	55	2	1	poultry	d97115c0de	2
+192	Indian-Spiced Cauliflower Steak with Tikka Masala Sauce\nWith Naan, Red Pepper-Raisin Relish, and Cilantro Oil	40	2	1	vegetarian	201672d3b4	2
+159	Japanese Soba Bowl\nWith Crispy Vegetables and Sesame Seeds	35	1	1	vegetarian	b5f041d83d	2
+147	Linguine Carciofi\nwith artichokes, pecorino cheese, and sun-dried tomatoes	35	1	0	vegetarian	8c9dbf5719	2
+207	Loaded Baked Potato Flatbread\nand cheddar, sour cream, chives, and roasted tomatoes	45	1	0	vegetarian	7b4ddcac28	2
+164	Mexican Beef Lasagna\nWith Zesty Taco Meat, Sour Cream, and Radishes	35	1	1	beef	d69f0ff59c	2
+172	Mexican Street Corn Salad\nin a tortilla bowl	35	1	0	vegetarian	9d0247f673	2
+186	Mojito Pork Chops\nwith mandarin orange and slivered almond salad	35	1	0	pork	ef68b04da9	2
+169	One-Skillet Lemon Orzo Risotto\nwith asparagus and Sweety Drop peppers	35	1	0	vegetarian	50bd76517f	2
+167	Philly Cheesesteak Pizza with Caramelized Onions\nWith Romaine Salad and Spicy White Wine Vinaigrette	35	1	1	beef	e2feee21d6	2
+139	Pizza with Ricotta and Shaved Asparagus\nWith Lemon-Herb Ricotta and Caramelized Shallots	40	1	1	vegetarian	17d49fc0be	2
+148	Pork Sausage Rigatoni\nWith Butternut Squash, Goat Cheese, and Pepitas	35	1	1	pork	57d3de5949	2
+163	Portobello and Pumpkin Spaghetti\nWith Robust Tomato Sauce	30	1	1	vegetarian	71b9faa520	2
+193	Pumpkin Seed Falafel Lettuce Wraps\nWith Tzatziki Sauce and Green Onion	35	1	1	vegetarian	60faed977e	2
+175	Quick-Braised Salmon\nwith miso-honey Caesar salad	35	1	0	seafood	473111342f	2
+140	Roasted Vegetable Quesadillas\nWith Oaxacan Cheese, Black Beans, and Chipotle Crema	35	2	2	vegetarian	4c436de8b3	2
+190	Rosemary and White Bean Orecchiette\nKalamata Olives, Chile Flake, Arugula, and Pine Nuts	35	1	1	vegetarian	3f7f467f08	2
+187	Seared Sirloin with Pecorino-Romano Basil Cream \nAnd Roasted Peppers and Potatoes	40	2	1	beef	14864a7ad9	2
+180	Shaved Asparagus and Quinoa Salad\nwith goat cheese, Anjou pear, and fried shallots	35	1	0	vegetarian	535769bf95	2
+184	Sirloin Steak with Red Pepper Steak Sauce\nWith Roasted Red Potatoes and Green Beans	40	1	1	beef	9c3954a75a	2
+209	Smoky Eggplant Steaks \nWith Balsamic Cashew Cream and Pine Nuts	35	1	1	vegetarian	78c9df3f38	2
+156	Sous-Vide Pork Shank \nWith Rustic Cannelini Bean Stew	55	2	0	pork	38ddb01920	2
+189	Spicy Louisiana-Style Tilapia \nWith Pan-Roasted Vegetable Relish	35	1	1	seafood	848b098fb2	2
+197	Spinach and Artichoke Flatbread\nwith roasted red peppers and red pepper flakes	35	1	1	vegetarian	a997d1b208	2
+168	Spinach and Parmesan-Stuffed Chicken\nwith lemon-garlic roasted cauliflower	35	3	0	poultry	28632027e7	2
+191	Steak Fajita Bowl\nWith Spanish Rice, Black Beans, and Sautéed Peppers	35	2	2	beef	8dc0daf0b4	2
+161	Steelhead Trout Niçoise\nwith warm potato and spinach salad	45	2	0	seafood	9297d778c1	2
+185	Summer Celebration Special: Surf and Turf\nWith Steak, Lobster Tail, Twice-Baked Potatoes, and Asparagus	40	1	1	beef	f2cf50290f	2
+146	Swiss-Smothered Chicken\nWith Green Beans and Whipped Cauliflower	50	2	1	poultry	2bf13ab442	2
+158	Swordfish Primavera\nWith a Summer Vegetable Medley and Sweet Pea Sauté	35	1	1	seafood	30019ea97b	2
+208	Tilapia Puttanesca	35	1	1	seafood	ae5be11da4	2
+171	Tunisian Lentil Salad\nWith Lemon Zest, Spinach, and Green Chili	40	1	1	vegetarian	e733fc29df	2
+162	Ultimate Beef Nachos\nWith Creamy Mexican Cheese, Salsa, and Pickled Onions	35	1	1	beef	cf850c40a8	2
+182	Wild Mushroom Ravioli\nWith a Fresh Parsley Butter Sauce and Walnuts	35	1	1	vegetarian	dce5b87b64	2
+179	Asian Shiitake Hot Pot\nWith Shiitake Mushrooms, Broccolini, and Snow Peas	35	1	2	vegetarian	2b1e0fac2e	2
+250	Asian Hot Pot\nWith Rice Noodles, Shiitake Mushrooms, and Sesame Oil	35	1	2	vegetarian	edcfe69fd5	2
+275	Berbere Chicken Thighs\nwith apricot-almond couscous and green beans	35	2	2	poultry	15889da41d	2
+253	Brasserie-Style Sirloin Steak\nwith truffle frites and herb butter	50	2	0	beef	6ba9ffb69f	2
+231	Brazilian Flat Iron Steak\nwith tomato rice and marinated zucchini	35	1	1	beef	3af5633c50	2
+255	Brazilian Shrimp Moqueca\nWith Coconut-Tomato Sauce, Zucchini, Grape Tomatoes, and Mashed Rutabagas	35	1	0	seafood	2d28589d7a	2
+258	Brown Sugar and Pecan-Crusted Pork Tenderloin Medallions\nwith sunchokes and carrots	35	1	1	pork	76762afe42	2
+251	Buffalo Cauliflower Bites Salad\nWith Shaved Cucumber, Carrot, and Bleu Cheese Salad	50	1	1	vegetarian	8b6126b4a8	2
+223	Burrata & Pesto Risotto\nwith tomato vinaigrette and roasted corn	50	3	0	vegetarian	76f30f92ac	2
+245	Burrata Pizza Margherita\nwith fresh tomato sauce and balsamic greens	35	2	0	vegetarian	02f120a3e9	2
+212	Butternut Squash Penne\nWith Herbed Goat Cheese	30	1	1	vegetarian	2f3fdbcae0	2
+234	Chicken a la King\nWith Mushrooms, Peppers, Peas, and Cauliflower "Rice"	40	1	0	poultry	0e455a99a9	2
+276	Chicken Breast in Red Wine-Butter Sauce\nWith Creamed Kale and Seared Mushrooms	40	2	0	poultry	738a2e7f23	2
+259	Classic Garlic Hummus Appetizer: Serves 3-4 People \nWith Fresh Vegetables and Pita Bread	30	1	1	vegetarian	9ed4683259	2
+236	Cornmeal-Crusted Fried Green Tomato Sandwich\nWith Maple Caramelized Onions, Dill Pickle Aioli, and Steak Fries	35	1	1	vegetarian	d7991adcb5	2
+242	Creamy Spinach and Artichoke Pasta\nwith Parmesan and cavatappi	50	1	1	vegetarian	5ad1abbe9f	2
+268	Crispy Pan-Fried Penne Pasta\nwith arrabiata sauce and Caesar salad	35	2	2	vegetarian	952be8512a	2
+257	Flavors of Buffalo Bleu Cheese Chicken Breast\nwith Buffalo cauliflower and arugula salad	45	1	2	poultry	50205e937a	2
+269	Goat Cheese and Herb-Crusted Pork Chop\nwith lemon and garlic roasted broccoli	35	1	0	pork	9a2adf62d3	2
+265	Green Goddess Pan-Seared Chicken\nWith Fresh Herb Pasta Salad	35	1	1	poultry	2e4cf3a4b1	2
+254	Hacienda Tortilla Stacks \nwith avocado, black beans, corn, and sour cream	40	2	1	vegetarian	231e7be32d	2
+232	Harissa-Rubbed Moroccan Chicken \nWith Carrot Puree and Orange Reduction	35	1	1	poultry	270ec61258	2
+267	Healthy Takeout Cashew Pork\nWith Jasmine Rice	40	1	0	pork	5b52a3d1d5	2
+214	Healthy Takeout Sesame Noodles\nWith Lemongrass-Ginger Mushrooms and Red Cabbage	35	1	0	vegetarian	6fe336e87d	2
+247	Honey-Rosemary Chicken\nWith Bleu Cheese, Kale, and Citrus Salad	35	1	1	poultry	4a8e8fdf03	2
+218	Hot Honey Salmon\nwith zucchini and tomatoes	35	2	1	seafood	253b8809c7	2
+222	Huli Huli Chicken Thighs\nwith jasmine rice and spicy beans	35	1	2	poultry	607a36f66e	2
+219	Lasagna Bianca\nwith cremini mushrooms and spinach	55	2	0	vegetarian	b211c4dac1	2
+241	Lemon-Braised Chicken \nWith Zucchini and Yellow Squash Tian	40	2	0	poultry	870f267e93	2
+260	Moroccan Spiced Chicken\nwith broiled eggplant, roasted Roma tomatoes, and garlic sauce	45	2	1	poultry	d1a009a3db	2
+278	Mother's Day Brunch: Smoked Salmon, Roasted Red Pepper, and Mascarpone Croissant\nwith pineapple and cucumber mocktail	30	1	0	seafood	56b9f81afb	2
+217	N'awlins Shrimp Po'Boy\nwith homemade remoulade and romaine salad	35	1	2	seafood	a0f370dddb	2
+244	Pan-Seared Steak with Garlic-Tomato Sauce\nand crispy Parmesan potato cakes	45	2	0	beef	566e6fd50e	2
+233	Parisian Bistro Bone-In Chicken\nwith dauphinoise potatoes and Vichy carrots	55	3	0	poultry	e9daf34b79	2
+215	Peking Portobello Steaks\nWith Almond Wild Rice and Garlic Baby Bok Choy	50	1	1	vegetarian	32ec56526d	2
+225	Persian Rice with Fava Beans and Pistachios\nWith Fresh Herbs and Lemon	40	1	1	vegetarian	6d970c2cae	2
+246	Pork Meatball Soup\nWith Fragrant Miso Broth, Bok Choy, and Fresno Chilis	35	1	1	pork	0210041ac7	2
+264	Quinoa and Roasted Apple Salad\nWith Fennel, Goat Cheese, and Cinnamon Toasted Walnuts	35	1	0	vegetarian	e6aab70925	2
+262	Roasted Chicken Ala Parmigiana\nWith Sweet Pea Risotto	35	1	1	poultry	3994977fbf	2
+226	Rosemary Brown Sugar Pork Chops\nWith Roasted Mushrooms and Heirloom Fingerling Potatoes	35	1	1	pork	b4335a7ce4	2
+227	Rosemary-Potato Wood-Fired Pizza\nWith Chopped Salad	50	1	0	vegetarian	2e262c6efa	2
+235	Shrimp and Broccoli Alfredo\nwith spaghetti	40	1	0	seafood	194bf16ec4	2
+252	Sicilian-Style Swordfish Steaks\nWith Cherry Tomato and Caper Relish	35	1	1	seafood	f8d160101a	2
+238	Sirloin Steak and Blue Cheese Salad\nwith honey-caramelized onions and croutons	35	1	0	beef	b194aba0ab	2
+239	Sirloin Steak with Sauce Robert\nwith blue cheese-mashed cauliflower	40	1	0	beef	ecfd4f30cd	2
+274	Sirloin Steak with White Wine Demi-Glace\nand garlic-herb potatoes	40	2	0	beef	ea04a625db	2
+213	Skinny Chicken Mozzarella\nwith marinara and garlicky greens	35	1	0	poultry	1aa381d9af	2
+266	Spicy Caramel Apple Pork Chops\nwith thyme-roasted butternut squash	30	1	1	pork	a0c7158d96	2
+220	Spinach, Egg, and Cheese Waffle Panini\nWith Granola-Strawberry Parfait	35	1	0	vegetarian	8a343b006a	2
+229	Spring Fettuccine with Asparagus and Lemon Gremolata\nIn a Spicy Cream Sauce with Toasted Almonds	30	1	1	vegetarian	391d52058d	2
+263	Steak Marsala\nwith Parmesan mash and cremini mushrooms	45	2	0	beef	fbdbd72f6e	2
+216	Tofu Pad Thai\nwith carrots and sweet chili sauce	40	1	2	vegetarian	e83d60b819	2
+273	Turkey Chili\nwith kidney beans, sour cream, and cheddar cheese	35	1	1	poultry	cbb6d9f7d7	2
+256	Whole Wheat Lemon-Cream Spaghetti\nwith pine nuts and raspberry vinaigrette salad	35	1	0	vegetarian	caabb29dd5	2
+221	Winter Vegetable and Biscuit Pot Pie\nWith Rutabaga, Kale, and Onion Hash	50	2	0	vegetarian	0f1840d22f	2
+230	Artichoke and Mozzarella Mini Quiches\nwith blistered tomato and spinach salad	35	2	0	vegetarian	65c4e4e9b4	2
+323	Artichoke and Tomato Flatbread\nwith goat cheese and pepperoncini	35	1	1	vegetarian	2a7390a851	2
+297	Asparagus and Roasted Red Pepper Risotto\nWith Baby Carrots and Basil	35	2	0	vegetarian	78c2a1d5b2	2
+312	Blackened Chicken Caesar Salad\nwith crispy shallots	35	2	1	poultry	f1c3261678	2
+335	Blackened Salmon with Avocado-Corn Salsa\nAnd Black Beans, Jalapeño, and Lime	40	2	2	seafood	c2202a9234	2
+346	Bone-In Chicken Diane\nwith mashed potatoes and green beans	50	2	0	poultry	f5d9299ba6	2
+317	Bread Bowl Veggie Chili\nWith Sweet Potatoes, Cheddar, Zucchini, and Chickpeas	50	1	1	vegetarian	c5769de5a7	2
+293	Buttermilk-Ranch Chicken\nwith mashed carrot and green beans	40	2	0	poultry	a280832696	2
+288	Cajun Blackened Chicken\nWith Greek Cucumber and Feta Salad	35	1	2	poultry	2c22667eb3	2
+338	Cajun Chicken Pasta\nwith bell peppers and cheesy breadcrumbs	35	1	2	poultry	83c83d4360	2
+311	Caramelized Apple Chutney Pork Chop\nwith green beans almondine	40	1	0	pork	488a8ed089	2
+294	Chicken and Garlic Peanut Sauce\nwith stir-fried broccoli and brown rice	35	1	1	poultry	ce202da4d1	2
+287	Chicken au Fromage\nwith mushroom-cheese sauce and lemon-broccoli	40	1	0	poultry	8f049341be	2
+281	Chicken Château with Dijon Demi-Glace\nand herb-roasted root vegetables	40	1	0	poultry	27a407fc70	2
+327	Chimichurri Steak\nwith roasted potatoes	45	1	1	beef	ee61d1a1b9	2
+322	Cider-Brined Pork Tenderloin: Serves 2-3 People\nWith Peppercorn Cream Gravy	35	1	1	pork	0dd14cef4a	2
+289	Classic Chicken Marsala\nwith buttery garlic mushroom sauce	35	1	0	poultry	56808330f8	2
+324	Curried Couscous with Roasted Chickpeas\nWith Broccoli and Feta Cheese	40	1	1	vegetarian	5bdad707f5	2
+307	Farmer's Market Japanese Noodles\nWith Sesame-Garlic Mushrooms and Watermelon Radish	35	1	2	vegetarian	d15bfde876	2
+337	Fennel and Pork Sausage Wood-Fired Pizza\nWith Herbed Ricotta and Honey	35	1	0	pork	a94685383a	2
+316	Feta- and Herb-Crusted Salmon\nwith lemony orzo	35	1	0	seafood	3799c99447	2
+304	Fontina and Caramelized Onion Flatbread\nwith arugula and grape tomatoes	45	2	0	vegetarian	d8ddd7920b	2
+321	Ginger-Marinated Pork Chop\nWith Kung Pao Brussels Sprouts	40	1	2	pork	41a016adaf	2
+325	Greek Quinoa Grain Bowl\nwith English cucumber, feta, and Sweety Drop peppers	40	1	1	vegetarian	51445a6e3e	2
+314	Greek Zucchini Quesadillas\nwith tomato and Kalamata olive salsa	45	1	0	vegetarian	786309f722	2
+309	Green Apple Chicken Curry\nWith Indian Spices and Jasmine Rice	35	1	1	poultry	d20bbbe884	2
+279	Grilled Honey-Mustard Salmon\nwith fresh tomato-dill relish and asparagus	40	1	0	seafood	04f237ca43	2
+336	Grilled Pork Chop with Whole Grain Dijon Sauce\nwith red potatoes and green beans	45	1	0	pork	eafd467b02	2
+300	Grilled Southeast Asian BBQ Chicken\nwith brown rice and zucchini salad	40	1	1	poultry	19fd9f9218	2
+308	Herb-Crusted Polenta\nWith White Bean Bruschetta, Garlic Zucchini, and Toasted Pine Nuts	35	1	1	vegetarian	96f8e4bfdd	2
+298	Hot Honey Pork Chop \nwith roasted snow pea-shallot medley	40	1	2	pork	d509241ed4	2
+320	Japanese Furikake Salmon\nwith fresh snow pea salad and ginger-miso dressing	35	1	0	seafood	6858bd52f7	2
+283	Kale and Mushroom Gratin\nWith Jasmine Rice, Cashew Cream, and Almond Parmesan	55	1	1	vegetarian	cabb893554	2
+345	Korean Glazed Chicken\nwith shaved asparagus, carrot, and pear salad	35	1	1	poultry	95fa89a187	2
+291	Lebanese-Style Mushroom Saute \nWith Lebanese Tomato Salsa, Couscous, and Toasted Almonds	30	1	1	vegetarian	7de0317859	2
+330	Lemon Tahini Quinoa Bowl\nWith Fresh Seasonal Vegetables	35	1	1	vegetarian	ff906787d3	2
+328	Loaded Weeknight Nachos \nWith Cashew "Cheese" Sauce, Black Beans, and Jalapeños	35	1	1	vegetarian	19713dbce2	2
+340	Ma Po Tofu \nWith Jasmine Rice	40	2	3	vegetarian	9e65dc2113	2
+302	Moroccan Chicken\nWith Citrus Salad and Hazelnuts	35	2	1	poultry	da6a3b1c88	2
+285	Pan Seared Salmon with Papaya Salsa\nAnd Roasted Asparagus	35	2	2	seafood	e2cba55276	2
+319	Parmesan Crusted Tilapia\nWith Basil Pesto and Tomato Orzo Pasta Salad	35	1	1	seafood	faf1e3a5f5	2
+329	Parsley-Caper Pork Medallions\nwith warm cauliflower salad	35	1	0	pork	2004644939	2
+341	Pesto Chicken Pizza\nwith mozzarella, grape tomatoes, and arugula	40	1	0	poultry	76fc254feb	2
+290	Pimenton-Herb Butter Sirloin Steak\nWith Sweet Potato-Piquillo Hash	50	1	1	beef	b78ab7a7b3	2
+342	Pork Chop with Almond Crust\nWith Fennel Apple Salad and Lemon, Dijon and Thyme Vinaigrette	30	2	0	pork	e8a70b4687	2
+339	Pub-Style Turkey Cheddar Burger\nWith Pickled Onions and Sweet Potato Fries	35	2	1	poultry	25acfae11e	2
+282	Queso and Frijoles Veggie Tacos\nwith chipotle creamed corn	40	1	2	vegetarian	0b869fbd9a	2
+332	Quinoa and Roasted Vegetable Salad\nWith Pan Seared Chicken	35	1	1	vegetarian	60140f62df	2
+334	Rustic Zucchini Flatbreads  \nWith Fresh Hummus and Caramelized Onions	35	1	1	vegetarian	34a35acfb3	2
+280	Shrimp and Pea Risotto\nwith white wine	40	1	1	seafood	77346266cd	2
+331	Sirloin Steak with Yukon-Red Pepper Hash\nAnd Mustard-Herb Compound Butter	35	1	0	beef	859a5e00cf	2
+292	Southwestern Shrimp Salad\nwith poblano peppers and Roma tomatoes	45	1	2	seafood	71835401c2	2
+296	Steak Wellington\nwith roasted carrots and mushroom demi-glace	55	2	0	beef	b1546c43d0	2
+284	Three Cheese Ravioli with Tomato Sauce\nWith Zucchini and Parmesan	50	3	0	vegetarian	4d953185b3	2
+299	Tilapia with Sweet Pea and Ricotta Puree\nWith Roasted Asparagus and Red Onion	35	1	1	seafood	a3b7e5b9fb	2
+315	Turkey Salisbury Steak with Mushroom Gravy\nwith green beans and cauliflower	40	1	0	poultry	7f80148a34	2
+347	Venezuelan Asado Negro\nwith roasted vegetables and tostones	40	1	0	beef	1996927a60	2
+310	Apple Cider-Brined Salmon\nWith a Tarragon-Mustard Cream Sauce and Green Beans	35	1	0	seafood	9f3e860f5b	2
+409	BBQ Shrimp Pizzas\nwith pico de gallo	35	2	1	seafood	55530dd862	2
+378	Beef-and-Sherry "Steak Diane"\nwith cremini and Dijon cream sauce, mashed potatoes, and asparagus	50	2	0	beef	3cbe65bc2e	2
+391	Bombay Stuffed Portobello Mushroom Caps\nWith Mango Mint Cucumber Salad	40	1	1	vegetarian	8ba783bc76	2
+370	Bone-In Pork Chop with Maple Butter\nwith roasted carrots and broccoli mash	40	1	0	pork	2c81440a9c	2
+362	Cajun Chicken\nwith cheddar grits and cremini mushrooms	35	1	2	poultry	bf60b5caf0	2
+353	Cajun Chicken Jambalaya\nWith Creole Rice and Vegetables	35	1	1	poultry	90f4e7fcc4	2
+402	Chicken Tikka Masala\nWith Chicken Thighs, Basmati Rice, and Garlic Naan	40	1	2	poultry	def0a73ab5	2
+360	Chicken Vegetable Soup\nWith Kale, Carrots, and Thyme	40	1	1	poultry	0c4e1ae181	2
+368	Chicken with Basil-Pecorino Cream Sauce\nand roasted red potatoes	50	2	0	poultry	78bd65b644	2
+375	Chimichurri Pork Chops  \nWith Gaucho-Style Vegetable Sauté	35	1	1	pork	4b483e04e5	2
+397	Creamy Avocado Pasta\nWith Roasted Pistachios and Basil	35	1	1	vegetarian	4e946a5754	2
+380	Crispy Onion Chicken\nwith creamy mushroom sauce and green beans	45	2	0	poultry	38c087c110	2
+394	Farro Salad with Asparagus\nwith Dijon vinaigrette	45	1	0	vegetarian	e252b1a751	2
+388	Feta and Herb Crusted Salmon\nwith Greek arugula salad	40	1	0	seafood	d33fd7aa80	2
+381	Goat Cheese Cavatappi Primavera\nwith asparagus, artichokes, and zucchini	35	1	0	vegetarian	c7df9728f1	2
+414	Grilled Green Tomato Po' Boy\nwith ranch seasoned Yukon chips	40	1	0	vegetarian	8033a43ad1	2
+365	Healthy Takeout Shrimp Singapore Noodles\nWith Snow Peas and Bell Pepper	40	1	1	seafood	13d3d66a80	2
+356	Herb-Roasted Chicken\nWith Whipped Cauliflower and Lemon Gremolata	35	1	1	poultry	8f403ad0d8	2
+410	Homestyle Beef Meatloaf\nWith Turnip Mash and Green Bean Amandine	35	1	1	beef	a73f8e20d7	2
+371	Honey Mustard Pork Tenderloin\nwith rosemary-roasted green beans and shallot	60	1	0	pork	fbc806a1b3	2
+382	Indian Roasted Sweet Potato and Puffed Rice Salad\nwith tamarind vinaigrette, cilantro, and watermelon radish	35	2	0	vegetarian	b761528125	2
+376	Korean BBQ Tofu\nWith Farro Stir Fry	35	1	1	vegetarian	30c2d3fd01	2
+372	Lemon-Poppy Seed Pork Tenderloin\nWith Apple-Brussels Sprout Hash and Cider Gastrique	35	1	0	pork	88fe31c5d8	2
+354	Maple Cranberry Bone-in Pork Chop\nwith rosemary Brussels sprouts and turnips	45	2	0	pork	d54fdb288d	2
+349	Margherita Chicken Breast \nwith Parmesan-cauliflower fritters	45	3	0	poultry	3612f67897	2
+412	Mushroom Pot Pie\nwith market vegetables and miso gravy	60	3	0	vegetarian	cec25fe0b5	2
+408	One-Pot Tomato Basil Pasta \nWith Almond Parmesan	30	1	1	vegetarian	98e0852a41	2
+369	Pan-Roasted Chicken and Artichokes\nWith Brussels Sprouts, Grape Tomatoes, and White Wine Jus	50	1	0	poultry	47cc7b19f1	2
+399	Pan-Seared Chicken Bruschetta\nWith Heirloom Baby Tomatoes, Parmesan, and Microgreens	40	2	1	poultry	3c3fc32ec4	2
+355	Pan-Seared Chicken Moutarde\nWith Chervil Gremolata and Smashed Yukon Potatoes	40	1	1	poultry	edac18e9b1	2
+348	Pan-Seared Chicken Scaloppine\nwith shallot-mushroom cream	35	2	0	poultry	d8bddeed5f	2
+379	Pan-Seared Flat-Iron Steak\nWith Roasted Winter Vegetable Hash	35	1	1	beef	63372c6bda	2
+395	Pink-Peppercorn Pork Tenderloin\nWith Peach and Cucumber Salad	50	2	2	pork	998f190f8b	2
+384	Pork Chop and Cranberry Mostarda\nwith roasted sweet potatoes and Brussels sprouts	35	1	0	pork	fe25cf27dc	2
+351	Pork Sausage and Parmesan Polenta\nWith Fennel, Bell Pepper, and Tomato Sauté	35	2	0	pork	771922b2b7	2
+413	Portobello Poblano Tacos\nWith Pan-Refried Black Beans and Lime Crema	50	1	2	vegetarian	e2c577f198	2
+415	Queso Chicken\nwith roasted broccoli and red peppers	35	1	1	poultry	e5c72a67d1	2
+416	Red Lentil Soup\nwith berbere oil, lemon, cilantro, and whole wheat pita	40	1	1	vegetarian	3bd99167ca	2
+366	Roasted Pesto Portobello Burger\nWith Garbanzo Bean, Cucumber, and Red Onion Salad	35	1	1	vegetarian	cdcdeea3a5	2
+404	Roasted Tomatillo-Poblano Soup\nWith Fresh Tortilla Chips	40	1	1	vegetarian	7d0404e0aa	2
+385	Shaved Vegetable Salad\nWith Goat Cheese, Walnuts and Sherry Vinaigrette	30	1	1	vegetarian	c15927e652	2
+389	Sicilian Chicken\nwith green beans and tomatoes pizzaiola	35	1	0	poultry	2b1094c41e	2
+403	South American Chicken Chupe\nWith Cilantro, Corn, Red Peppers, and Mild Chipotle Cream Sauce	35	1	2	poultry	4f513d04df	2
+352	Southern Sweet and Spicy Pork Chop\nwith pepper jelly and sautéed vegetables	30	1	2	pork	143cce36ab	2
+377	Southwestern Tofu Cobb Salad\nWith Quinoa, Black Beans, and Creamy Avocado Dressing	35	1	1	vegetarian	5ecbaa5b2b	2
+363	Spaghetti with Burrata Cheese\nwith pine nuts, wilted grape tomatoes, and spinach	35	1	0	vegetarian	535af7d56e	2
+396	Special: Sous Vide Baby Back Ribs\nWith Roasted Brussels Sprout, Red Bell Pepper, and Sweet Potato Salad	35	1	1	pork	dc7281114a	2
+411	Summer Succotash Grilled Chicken\nWith Yellow Squash and Heirloom Tomatoes	35	1	1	poultry	b8a2b25013	2
+364	Sunday Supper Pot Roast Steak\nwith mashed potatoes	55	2	0	beef	93209e92a3	2
+407	Tandoori Roasted Cauliflower\nwith garlic naan and orange salad	45	3	1	vegetarian	a0f2060add	2
+393	Thai Red Curry Shrimp\nwith jasmine rice and snow peas	35	1	1	seafood	38f999dc30	2
+392	Tilapia Florentine\nWith Green Beans and Toasted Almonds	40	1	0	seafood	cf93de6dbb	2
+383	Turkey and Kidney Bean Chili\nWith Jalapeño Cornbread	35	1	1	poultry	1e3c55fdb7	2
+400	Vietnamese-Style Steak Pho\nWith Rice Vermicelli in a Fragrant Ginger Broth	35	1	1	vegetarian	b8ef3a0e9f	2
+406	Wood-Fired BBQ Chicken Pizza\nwith caramelized onions and ranch drizzle	45	1	0	poultry	d7cab0472f	2
+401	Baja Grilled Salmon\nWith Mango-Lime Salsa and Garlicky Spinach	35	1	1	seafood	f895e3c3af	2
+228	Blue Cheese and Smoked Almond Bone-In Pork Chop\nwith honey-roasted carrots and chives	55	1	0	pork	a658ff05bc	2
+435	Coconut Jasmine Rice Bowl\nwith fried plantains and corn pico de gallo	45	2	1	vegetarian	2e385f5072	2
+25	Cornmeal Crusted Tilapia\nWith Tomatillo Salsa and Roasted Sunchokes	35	1	1	seafood	eb55103c3e	2
+417	Fennel and Thyme Crusted Pork Tenderloin\nWith Oven-Roasted Brussels Sprouts and White Balsamic Peperonata	40	2	0	pork	6db97dfa07	2
+442	Fig and Goat Cheese Flatbread\nwith walnuts and caramelized onions	45	2	0	vegetarian	4f4c943db7	2
+47	Friendsgiving Side Trio\nwith apple herb stuffing, pecorino-garlic mashed potatoes, and cranberry-almond green beans	60	2	0	vegetarian	7fcdb34825	2
+373	Greek Bone-In Chicken with Roasted Vegetables\nwith homemade tzatziki sauce and lemon	40	1	0	poultry	cffbd28f35	2
+431	Korean Bi Bim Bop\nWith Kimchi, Pickled Vegetables, and Marinated Eggplant	35	1	1	vegetarian	721f28bde7	2
+434	Lemon-Chicken Paillard\nWith Spinach and Parmesan Salad	35	1	1	poultry	4bd11c2abc	2
+133	Mediterranean Chicken Pita\nWith Turmeric Rice and Cool Garlic Yogurt Sauce	35	1	1	poultry	ea114c7b80	2
+205	Mini Mushroom and Onion Pecan Quiches\nWith Arugula Salad and French Mustard Vinaigrette	40	1	1	vegetarian	fa322a7f4c	2
+305	New England-Style Fish Cakes\nwith romaine and tomato salad	45	2	0	seafood	6527266457	2
+386	Penne Pasta with Sun-Dried Tomato Cream\nwith cremini mushrooms, spinach, and Parmesan	35	1	1	vegetarian	2c7f29997b	2
+344	Pork Chop Santorini with Sweety Drop-Kalamata Butter \nand cucumber salad	40	1	1	pork	c7bf0421ec	2
+144	Raspberry Chipotle BBQ Chicken\nWith Baby Arugula and Onion Salad	35	1	1	poultry	ca5e01a4cb	2
+430	Shrimp Pad Thai\nwith carrots, roasted peanuts, and cilantro	30	2	2	seafood	c1a73dddde	2
+422	Spring Noodle Salad\nwith roasted vegetables and strawberry vinaigrette	35	1	0	vegetarian	75f8ae05b6	2
+427	Swiss and Asparagus Stuffed Chicken\nwith sautéed zucchini and robusto tomato sauce	45	2	0	poultry	709133698c	2
+423	Texas-Style Corn Chip Pie\nWith Tomatoes, Black Beans, and Home-made Corn Chips	35	2	2	vegetarian	6c6940e30d	2
+425	Thai Ginger-Garlic Grilled Pork Chops\nWith Kaffir Lime and Cucumber Relish	35	1	1	pork	b942e5eb13	2
+420	Tofu Carnitas Burrito Bowl\nWith Cilantro Brown Rice, Black Beans, and Watermelon Radishes	35	1	2	vegetarian	4741ca4bdc	2
+437	Tropical Quinoa Tabbouleh\nWith Kale, Toasted Cashews, and a Maple-Lime Dressing	35	1	1	vegetarian	08ab1dcd04	2
+439	Vegan Fettucini Alfredo\nWith Basil and Sautéed Garlic Mushrooms	35	1	1	vegetarian	4db187c679	2
+441	Spicy Cajun Shrimp and Cheddar Grits\nwith roasted peppers and mushrooms	35	1	1	seafood	34439cc4e5	2
+165	Acapulco Steak Tacos\nwith pico de gallo and queso fresco	40	1	2	beef	ff59e1eaad	2
+66	Agave-Ginger Glazed Salmon  \nWith Edamame Mash, Charred Bok Choy, and Orange	35	2	1	seafood	84141cf001	2
+326	Alabama-Style BBQ Pork Tenderloin\nWith Green Beans and Fresh Jalapeño Cornbread	50	1	1	pork	7df8233909	2
+95	Alsatian Pizza\nwith caramelized onions, Swiss cheese, and arugula	45	1	0	vegetarian	a02bdc7989	2
+333	Artichoke and Roasted Red Pepper Paella \nWith Saffron Scented Arborio Rice	35	2	0	vegetarian	f9849dcd6e	2
+418	BBQ Gouda Juicy Lucy\nwith cheesy center and macaroni salad	40	2	0	beef	ab5a0c658f	2
+14	Bone-In Pork Chop with Hazelnut Gremolata\nwith roasted asparagus, yellow squash, and lemon-caper aioli	35	1	0	pork	5971d10af8	2
+211	Broccoli and Cheddar Pizza\nwith red bell pepper and red onion	40	1	0	vegetarian	342d06e160	2
+286	Butternut Squash and Walnut Flatbread\nWith Ricotta, Pomegranate Glaze, and Bleu Cheese	35	1	1	vegetarian	1f55e6fae4	2
+243	Calzone with Broccoli, Red Peppers, and Mushrooms\nwith marinara dipping sauce	55	3	0	vegetarian	da9ece27bc	2
+119	Cheddar-Stuffed Turkey Meatballs\nwith maple-BBQ sauce and ranch salad	30	1	0	poultry	901ff60dc1	2
+166	Chicken Breast a la Brasa\nwith sweet potato fries and jalapeño-garlic dipping sauce	45	1	2	poultry	b4f21dfc53	2
+358	Chicken Breast with Saffron Beurre Blanc\nwith roasted Brussels sprouts and red pepper	35	1	0	poultry	b88d161c96	2
+421	Classic French Green Peppercorn Pork Tenderloin\nwith mashed carrots and roasted asparagus	35	2	0	pork	80bc0a130a	2
+429	Farmhouse Fried Chicken\nwith mashed potatoes, green onion gravy, and corn	40	3	0	poultry	27e251a3b2	2
+69	Gardein Vegetarian Rigatoni Bolognese\nWith Robust Tomato Sauce and Fresh Basil	35	1	1	vegetarian	fce8a3c8c2	2
+433	Gnocchi in Truffled Parmesan Cream\nwith cremini mushrooms and sun-dried tomatoes	30	1	0	vegetarian	4a6eda1d3c	2
+178	Grilled Chicken with Garlic and Herb Wasakaka Sauce\nwith sweet potatoes and cucumber salad	55	1	1	poultry	d4a4adde44	2
+249	Grilled Montreal Chicken Breast\nwith roasted hot honey sweet potatoes and snow peas	40	1	2	poultry	f381b7fd34	2
+318	Healthy Takeout Sweet and Sour Chicken\nwith brown rice and green bell pepper	40	1	0	poultry	1f582d5288	2
+440	Honey-Roasted Chicken Thighs\nWith Sweet Potato Wedges and Cucumber Salad	35	1	1	poultry	84fc5c7321	2
+428	Mesquite Chicken\nwith loaded potato wedges	45	2	1	poultry	cc12403414	2
+359	Miso Vegetable Ramen\nWith Radish Sprouts, Oyster Mushrooms, and Sambal	35	1	1	vegetarian	50bb1b87d6	2
+419	Neapolitan Pizza Margherita\nwith arugula salad	35	1	1	vegetarian	d56cb7091c	2
+58	Pan-Seared Swordfish\nWith Tangerine and Jalapeño Salsa and Jasmine Rice	35	1	1	seafood	ef8911062d	2
+426	Pappardelle with Chicken and Wild Mushroom Ragù\nWith Rosemary, Balsamic, and Parmesan	35	1	1	poultry	205a853a71	2
+112	Pesto and Sun-Dried Tomato Stuffed Chicken Breast\nWith Cauliflower Mash and Garlic Kale	40	2	1	poultry	7e2e70d456	2
+436	Pesto Shrimp and Pecorino Grits\nwith mushrooms and grape tomatoes	35	1	0	seafood	55d245613c	2
+438	Quinoa Sweet Potato Burger\non an English muffin	45	2	0	vegetarian	f6e83354dd	2
+424	Roasted Pork Tenderloin and Soba Noodle Bowl\nWith Teriyaki Broth	35	1	1	pork	fe5fbde319	2
+237	Acapulco Beef Burger\nwith fresh pico de gallo and cilantro-lime fries	55	2	1	beef	5eea0bbcf9	2
+93	Apricot Glazed Pork Medallions\nWith Roasted Coriander Carrots and Creamy Tahini Swiss Chard	40	2	2	pork	b4f19695f3	2
+361	Aztec-Style Red Beans and Rice\nWith Pineapple Guacamole, Housemade Tortilla Chips, and Toasted Pepitas	35	2	1	vegetarian	fae787b619	2
+374	BBQ Summer Salmon\nWith Snap Pea and Fennel Slaw	35	2	0	seafood	715c2cd0ca	2
+5	Braised Pork Belly Tacos\nWith Homemade Pico de Gallo and Cilantro-Lime Rice	30	1	1	pork	c7e8daa9c7	2
+301	Turkey Sausage & Sun-Dried Tomato Sandwich\nWith Fennel, Swiss Cheese, and Roasted Potatoes	40	2	1	poultry	bd5d38ec9e	2
+398	Catalan-Style Portobello Steaks\nWith Patatas Bravas Purple Potatoes	35	1	1	vegetarian	5659925295	2
+271	Cauliflower Crust Summer Vegetable Pizza\nWith Fresh Almond Pesto, Heirloom Tomatoes, Arugula, and Shaved Spring Onion	55	1	1	vegetarian	529ca47b6a	2
+201	Charred Poblano Chimichurri Flat Iron Steak\nWith Orange Caramelized Green Beans and Radish Salad	40	2	2	beef	befa332142	2
+343	Crispy Chicken Provençal\nWith a Niçoise Olive and Tomato Pan Sauce and Arugula Salad with Champagne Vinaigrette	40	1	0	poultry	0c566c8217	2
+33	Crispy Chickpea Gnocchi  \nWith Red Pepper Cream Sauce and Toasted Walnuts	40	1	1	vegetarian	83efff0464	2
+303	Family Meal: Friendsgiving: Quick and Easy Turkey Meatballs and White Cheddar Mash\nwith green beans and cranberry sauce	50	2	0	poultry	7ebcfef5a8	2
+80	Greek-Style Pork Tenderloin\nWith Lemon-Herb Rub, Zucchini, and Bell Pepper Sauté	50	2	1	pork	54576f142b	2
+350	Green Tea Poached Salmon\nWith Vermicelli Noodles and Chili Cucumber Vinaigrette	35	1	1	seafood	d3bff0c9ba	2
+177	Grilled Romaine Chicken Salad\nWith Homemade Gorgonzola Scallion Dressing	35	1	1	poultry	e254153094	2
+64	Italian Stuffed Zucchini\nWith Sicilian Herbs and Basil Lemon Tahini Sauce	35	1	1	vegetarian	2938623cf9	2
+277	Kale and White Bean Stew\nWith Cannellini Beans, White Wine, and Thyme	35	1	1	vegetarian	600a0810c4	2
+240	Market Vegetable Alfredo Pasta\nWith Roasted Asparagus, Red Bell Pepper, and Carrots	35	1	0	vegetarian	e3cb4dfa41	2
+204	One Pan Farfalle with Roasted Red Pepper\nWith Spinach, Kalamata Olives, and Parmesan	30	1	0	vegetarian	476c5cc7cc	2
+390	Pan-Fried Sole with White Wine Butter Sauce\nWith Fresh Lemon and Roasted French Vegetable Medley	35	2	0	seafood	4b475ed2f9	2
+306	Pan Roasted Pork Tenderloin\nWith Orzo, Cherry Tomato, Charred Lemon and Baby Arugula	35	1	1	pork	cd7a9dac87	2
+127	Pan-Seared Pork Chop with Fennel-Honey Butter\nwith au gratin turnips and Swiss chard	40	1	0	pork	c723d2cbff	2
+224	Piedmont Chicken Breast\nwith fresh mozzarella, pesto, and balsamic reduction caprese salad	40	1	0	poultry	51e3662ac6	2
+272	Red, White, and Blue Smoothies \nWith Cherries, Blueberries, Honey, and Greek Yogurt	10	1	0	vegetarian	d22c42f6e5	2
+3	Roasted Eggplant Salad\nwith lemon-tahini dressing, goat cheese, and smoked almonds	35	1	0	vegetarian	44d4472922	2
+367	Roasted Vegetable Panini\nwith romaine-arugula salad in balsamic-Dijon dressing	35	1	0	vegetarian	027cf3225e	2
+9	Sage and Brown Butter Pumpkin Gnocchi\nWith Kale and Sweet and Spicy Candied Walnuts	35	1	1	vegetarian	5386378a69	2
+72	Salmon Crusted with "Everything Bagel" Seasoning\nwith chive sour cream, arugula salad, and lemon-caper vinaigrette	35	1	1	seafood	196dfe75af	2
+432	Seared Sirloin and Miso-Chive Compound Butter\nWith Wasabi Mashed Potatoes and Green Beans	50	2	2	beef	d484cf4817	2
+196	Shrimp Cocktail Appetizer: Serves 3-4 People\nWith Horseradish Cocktail Sauce and Lemon	30	1	1	seafood	5afa5284ad	2
+387	Sicilian-Style Capellini\nWith Roasted Purple Cauliflower and Lemon Caper Sauce	35	1	1	vegetarian	3752c205d2	2
+70	Sirloin Steak and Fondant Potatoes\nWith Chive-Horseradish Sauce, Roasted Red Pepper, and Brussels	40	1	0	beef	a147794a62	2
+313	Smoky Char-Grilled Pork Loin Chops \nWith Shaved Brussels Sprout Salad, Pistachios, and Dijon Vinaigrette	35	1	1	pork	93283ccf1a	2
+202	Smoky Tofu Club Sandwich\nWith Pimenton Aioli, Caramelized Onions, and Garlic Potato Wedges	50	1	0	vegetarian	7503265efe	2
+248	Spanish Vegetable Paella\nWith Shiitake Mushrooms, Artichokes, and Saffron	40	1	1	vegetarian	6f057bb377	2
+295	Spice Rubbed Bone-In Pork Chop\nWith Cannellini Bean, Kale, Mushroom, and Bell Pepper Succotash	35	1	1	pork	1f4f25c601	2
+63	Sundried Tomato Fettuccine Alfredo  \nWith a Dairy-Free Garlic Cream Sauce, Basil, and Lemon Zest	30	1	1	vegetarian	fcf0e59dc6	2
+20	Swedish-Style Hasselback Potatoes\nWith Caramelized Onions and Dijon-Dressed Salad	50	1	1	vegetarian	6f23fd1a93	2
+405	Sweet Tomato Cream Rigatoni \nWith Ricotta, Asiago, and Fresh Basil	35	1	1	vegetarian	4984448458	2
+79	Tropical Greens Summer Salad\nWith Toasted Cashews and a Creamy Grilled Lime Vinaigrette	30	1	1	vegetarian	0d2d7a6a3f	2
+142	Truffled Grilled Cheese with Tomato Soup\nWith Swiss and Cheddar on Sourdough	35	1	0	vegetarian	e74ba4490f	2
+261	Turkey Stuffed Acorn Squash\nWith Black Beans, Southwestern Spices, and Mexican Cheese	35	1	1	poultry	628ec3f1f8	2
+357	Veggie Lo Mein\nWith Edamame, Shiitake Mushrooms, and Sugar Snap Peas	35	1	0	vegetarian	b1b532ef5a	2
+89	White Wine Chicken Scaloppine\nwith roasted asparagus and carrots	45	2	0	poultry	cb2d729294	2
+270	Whole Wheat Couscous, Roasted Fennel, and Dried Cherry Salad\nwith coriander almonds, kale, and carrots	35	1	0	vegetarian	0e20d6769c	2
 \.
 
 
@@ -1319,29 +1400,26 @@ COPY public.recipes (id, title, prep_time, difficulty, spice_level, category, im
 --
 
 COPY public.recipes_carts (recipe_id, cart_id, quantity) FROM stdin;
-45	2	1
-18	2	1
-21	2	2
-67	2	2
-19	2	1
-45	3	1
-21	3	2
-67	3	2
-19	3	3
+45	31	1
+21	31	2
+67	31	2
+19	31	3
+1	31	1
 4	4	1
 54	4	1
 53	4	1
-34	7	1
-68	7	1
-11	7	1
-19	7	1
+45	33	1
+67	33	2
+19	33	3
+21	33	4
 68	16	1
 78	16	3
 24	18	1
 4	18	2
-45	20	1
-2	20	1
-1	20	1
+45	25	1
+21	25	2
+67	25	2
+19	25	3
 \.
 
 
@@ -7965,7 +8043,7 @@ COPY public.users (id, username, email, password) FROM stdin;
 -- Name: carts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.carts_id_seq', 24, true);
+SELECT pg_catalog.setval('public.carts_id_seq', 33, true);
 
 
 --
@@ -7980,6 +8058,13 @@ SELECT pg_catalog.setval('public.categories_id_seq', 1, false);
 --
 
 SELECT pg_catalog.setval('public.conversions_id_seq', 55, true);
+
+
+--
+-- Name: favorites_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.favorites_id_seq', 38, true);
 
 
 --
@@ -8035,6 +8120,14 @@ ALTER TABLE ONLY public.conversions
 
 
 --
+-- Name: favorites favorites_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favorites
+    ADD CONSTRAINT favorites_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: ingredients ingredients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8083,6 +8176,14 @@ ALTER TABLE ONLY public.ingredients
 
 
 --
+-- Name: favorites unique_recipe_user; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favorites
+    ADD CONSTRAINT unique_recipe_user UNIQUE (recipe_id, user_id);
+
+
+--
 -- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -8112,6 +8213,22 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.carts
     ADD CONSTRAINT carts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: favorites favorites_recipe_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favorites
+    ADD CONSTRAINT favorites_recipe_id_fkey FOREIGN KEY (recipe_id) REFERENCES public.recipes(id) ON DELETE CASCADE;
+
+
+--
+-- Name: favorites favorites_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.favorites
+    ADD CONSTRAINT favorites_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
