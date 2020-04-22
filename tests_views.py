@@ -8,6 +8,7 @@ os.environ['DATABASE_URL'] = "postgresql:///recipe-test"
 
 
 from app import app, CURR_USER_KEY, CURR_CART_KEY
+from models import User, Cart, RecipeCart, db
 
 
 app.config['WTF_CSRF_ENABLED'] = False
@@ -21,24 +22,14 @@ class RecipesViewTestCase(TestCase):
 
         self.client = app.test_client()
 
-    #     self.testuser = User.signup(username="testuser",
-    #                                 email="test@test.com",
-    #                                 password="test",
-    #                                 image_url=None)
-    #     self.u1 = User.signup(username="apple_girl", email='apple@test.com', password='test', image_url=None)
-    #     self.u2 = User.signup(username="bagel_man", email='bagel@test.com', password='test', image_url=None)
-    #     self.u3 = User.signup(username="carrot_girl", email='carrot@test.com', password='test', image_url=None)
-    #     self.u4 = User(id=44444, username="danish_man", email='danish@test.com', password='test', image_url=None)
-    #     db.session.add(self.u4)
-    #     self.u5 = User(id=55555, username="eggplant_man", email='eggplant@test.com', password='test', image_url=None)
-    #     db.session.add(self.u5)
-    #     db.session.commit()
+        self.testuser = User.query.get(777)
+        self.delete_carts_by_user(self.testuser.id)
 
     def test_index_recipes(self):
-
+        """
+        Test index recipes route displays recipes in DB
+        """
         with self.client as c:
-
-
             resp = c.get('/recipes')
             html = resp.get_data(as_text=True)
             self.assertEqual(resp.status_code, 200)
@@ -50,6 +41,9 @@ class RecipesViewTestCase(TestCase):
             self.assertNotIn('No recipes found.', html)
 
     def test_search_recipes(self):
+        """
+        Test index recipes route filters properly using query parameters
+        """
         with self.client as c:
 
             resp = c.get('/recipes?difficulty=2&spice=0')
@@ -63,6 +57,10 @@ class RecipesViewTestCase(TestCase):
             self.assertNotIn('No recipes found.', html)
 
     def test_search_recipes_no_results(self):
+        """
+        Test index recipes route displays correct message if
+        no recipes are found under a filter.
+        """
         with self.client as c:
             resp = c.get('/recipes?difficulty=1&spice=3&time=10')
             html = resp.get_data(as_text=True)
@@ -70,246 +68,193 @@ class RecipesViewTestCase(TestCase):
             self.assertIn('No recipes found.', html)
 
     def test_add_to_cart_no_user(self):
+        """
+        Test add to cart route requires active user.
+        """
         with self.client as c:
             resp = c.post('/api/recipes/1/add-to-cart')
             html = resp.get_data(as_text=True)
             self.assertEqual(resp.status_code, 401)
             self.assertIn("Access Unauthorized", html)
 
+    def test_add_to_cart(self):
+        """
+        Test add to cart route adds correct recipe to cart.
+        """
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+            resp = c.post('/api/recipes/1/add-to-cart')
+            html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 202)
+            self.assertIn("Recipe 1 added to cart", html)
+    def delete_carts_by_user(self, user_id):
+        """
+        Utility function for deleting all carts associated with user
+        """
+        carts = Cart.query.filter_by(user_id = user_id).all()
+        for cart in carts:
+            db.session.delete(cart)
+        db.session.commit()
     def test_index_carts_no_user(self):
+        """
+        Test index carts route requires active user.
+        """
         with self.client as c:
             resp = c.get("/carts", follow_redirects=True)
             html = resp.get_data(as_text=True)
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access Unauthorized", html)
 
+    def test_index_carts_empty(self):
+        """
+        Test index carts route displays correct message
+        when user has no carts.
+        """
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+            resp = c.get("/carts", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("No Active Cart", html)
+            self.assertIn("No Carts Saved for Later", html)
+            self.assertIn("No Cart History for User", html)
+
     def test_new_carts_no_user(self):
+        """
+        Test new cart route requires active user.
+        """
         with self.client as c:
             resp = c.get("/carts/new", follow_redirects=True)
             html = resp.get_data(as_text=True)
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access Unauthorized", html)
     def test_copy_carts_no_user(self):
+        """
+        Test copy cart route requires active user.
+        """
         with self.client as c:
             resp = c.post("/carts/2/copy", follow_redirects=True)
             html = resp.get_data(as_text=True)
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access Unauthorized", html)
+
+    def test_copy_carts(self):
+        """
+        Test copy cart route creates new cart with correct name
+        and makes it the active cart.
+        """
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            cart = Cart(name='test_cart', user_id=self.testuser.id, is_complete=True)
+            db.session.add(cart)
+            db.session.commit()
+            resp = c.get("/carts", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("No Active Cart", html)
+            self.assertIn("No Carts Saved for Later", html)
+            self.assertNotIn("No Cart History for User", html)
+
+            resp = c.post(f"/carts/{cart.id}/copy", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertNotIn("No Active Cart", html)
+            self.assertIn("test_cart(copy)", html)
+            self.assertIn("No Carts Saved for Later", html)
+            self.assertNotIn("No Cart History for User", html)
+
     def test_activate_carts_no_user(self):
+        """
+        Test activate cart route requires active user.
+        """
         with self.client as c:
             resp = c.post("/carts/2/activate", follow_redirects=True)
             html = resp.get_data(as_text=True)
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access Unauthorized", html)
+    def test_activate_carts(self):
+        """
+        Test activate cart route moves correct cart from inactive
+        to active cart.
+        """
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+
+            cart = Cart(name='test_cart', user_id=self.testuser.id)
+            db.session.add(cart)
+            db.session.commit()
+
+            resp = c.get("/carts", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn("No Active Cart", html)
+            self.assertNotIn("No Carts Saved for Later", html)
+            self.assertIn("No Cart History for User", html)
+
+            resp = c.post(f"/carts/{cart.id}/activate", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertNotIn("No Active Cart", html)
+            self.assertIn("No Carts Saved for Later", html)
+            self.assertIn("No Cart History for User", html)
+    
     def test_delete_carts_no_user(self):
+        """
+        Test delete cart route requires active user.
+        """
         with self.client as c:
             resp = c.post("/carts/2/delete", follow_redirects=True)
             html = resp.get_data(as_text=True)
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access Unauthorized", html)
 
+    def test_delete_carts(self):
+        """
+        Test delete cart route removes correct cart from DB.
+        """
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+            cart = Cart(name='test_cart', user_id = self.testuser.id)
+            db.session.add(cart)
+            db.session.commit()
+            resp = c.post(f"/carts/{cart.id}/delete", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn(f'Cart &#34;test_cart&#34; deleted.', html)
+            self.assertEqual(len(Cart.query.filter_by(name='test_cart').all()), 0)
+
     def test_checkout_no_user(self):
+        """
+        Test checkout route requires active user.
+        """
         with self.client as c:
             resp = c.get("/carts/2/checkout", follow_redirects=True)
             html = resp.get_data(as_text=True)
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access Unauthorized", html)
 
-    # def test_user_show(self):
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
-    #         resp = c.get(f'/users/{self.testuser.id}')
-
-    #         self.assertEqual(resp.status_code, 200)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertIn('@testuser', html)
-    #         self.assertRegex(html, '<a class=\"messages-display-user\".*0</a>')
-    #         self.assertRegex(html, '<a class=\"following-display\".*0</a>')
-    #         self.assertRegex(html, '<a class=\"follower-display\".*0</a>')
-    #         self.assertRegex(html, '<a class=\"likes-display\".*0</a>')
-
-    # def test_user_show_no_user(self):
-    #     with self.client as c:
-    #         resp = c.get(f'/users/{self.testuser.id}', follow_redirects=True)
-
-    #         self.assertEqual(resp.status_code, 200)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertIn('Access unauthorized', html)
-    # def setup_likes(self):
-    #     m1 = Message(text="test message", user_id=self.testuser.id)
-    #     m2 = Message(text="other thing", user_id=self.testuser.id)
-    #     m3 = Message(id=9876, text="liked warble", user_id=self.u1.id)
-    #     db.session.add_all([m1, m2, m3])
-    #     db.session.commit()
-
-    #     l1 = Likes(user_id=self.testuser.id, message_id=9876)
-
-    #     db.session.add(l1)
-    #     db.session.commit()
-
-    # def test_user_show_messages_display(self):
-    #     self.setup_likes()
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
-            
-    #         resp = c.get(f'/users/{self.testuser.id}')
-
-    #         self.assertEqual(resp.status_code, 200)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertIn('@testuser', html)
-    #         self.assertRegex(html, '<a class=\"messages-display-user\".*2</a>')
-    # def test_user_show_likes_display(self):
-    #     self.setup_likes()
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
-            
-    #         resp = c.get(f'/users/{self.testuser.id}')
-
-    #         self.assertEqual(resp.status_code, 200)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertIn('@testuser', html)
-    #         self.assertRegex(html, '<a class=\"likes-display\".*1</a>')
-
-    # def test_add_like(self):
-    #     m = Message(id=1984, text="The earth is round", user_id=self.u1.id)
-    #     db.session.add(m)
-    #     db.session.commit()
-
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
-
-    #         resp = c.post("/messages/1984/like", follow_redirects=True)
-    #         self.assertEqual(resp.status_code, 200)
-
-    #         likes = Likes.query.filter(Likes.message_id==1984).all()
-    #         self.assertEqual(len(likes), 1)
-    #         self.assertEqual(likes[0].user_id, self.testuser.id)
-
-    # def test_add_like_no_user(self):
-    #     self.setup_likes()
-    #     with self.client as c:
-    #         resp = c.post("/messages/9876/like", follow_redirects=True)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertEqual(resp.status_code, 200)
-    #         self.assertIn("Access unauthorized", html)
-
-    # def test_remove_like(self):
-    #     self.setup_likes()
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
-
-    #         resp = c.post("/messages/9876/unlike", follow_redirects=True)
-    #         self.assertEqual(resp.status_code, 200)
-
-    #         likes = Likes.query.filter(Likes.message_id==9876).all()
-    #         self.assertEqual(len(likes), 0)
-
-    # def test_remove_like_no_user(self):
-    #     self.setup_likes()
-    #     with self.client as c:
-
-    #         resp = c.post("/messages/9876/unlike", follow_redirects=True)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertEqual(resp.status_code, 200)
-    #         self.assertIn("Access unauthorized", html)
-
-    # def setup_followers(self):
-    #     f1 = Follows(user_being_followed_id=self.testuser.id, user_following_id=self.u1.id)
-    #     f2 = Follows(user_being_followed_id=self.testuser.id, user_following_id=self.u2.id)
-    #     f3 = Follows(user_being_followed_id=self.u4.id, user_following_id=self.testuser.id)
-        
-    #     db.session.add_all([f1,f2,f3])
-    #     db.session.commit()
-
-    # def test_user_show_following_display(self):
-    #     self.setup_followers()
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
-
-    #         resp = c.get(f'/users/{self.testuser.id}')
-
-    #         self.assertEqual(resp.status_code, 200)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertIn('@testuser', html)
-    #         self.assertRegex(html, '<a class=\"following-display\".*1</a>')
-
-    # def test_user_show_followers_display(self):
-    #     self.setup_followers()
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
-
-    #         resp = c.get(f'/users/{self.testuser.id}')
-
-    #         self.assertEqual(resp.status_code, 200)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertIn('@testuser', html)
-    #         self.assertRegex(html, '<a class=\"follower-display\".*2</a>')
-
-    # def test_add_follow(self):
-    #     self.setup_followers()
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
-
-    #         resp = c.post("/users/55555/follow", follow_redirects=True)
-    #         self.assertEqual(resp.status_code, 200)
-
-    #         follows = Follows.query.filter(Follows.user_being_followed_id==55555).all()
-    #         self.assertEqual(len(follows), 1)
-
-    # def test_add_follow_no_user(self):
-    #     self.setup_followers()
-    #     with self.client as c:
-
-    #         resp = c.post("/users/55555/follow", follow_redirects=True)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertEqual(resp.status_code, 200)
-    #         self.assertIn("Access unauthorized", html)
-
-    # def test_add_follow_invalid_user(self):
-    #     self.setup_followers()
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
-    #         resp = c.post("/users/99999999/follow", follow_redirects=True)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertEqual(resp.status_code, 404)
-    #         self.assertIn("Page not found", html)
-
-    # def test_remove_follow(self):
-    #     self.setup_followers()
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
-
-    #         resp = c.post("/users/44444/unfollow", follow_redirects=True)
-    #         self.assertEqual(resp.status_code, 200)
-
-    #         follows = Follows.query.filter(Follows.user_being_followed_id==44444).all()
-    #         self.assertEqual(len(follows), 0)
-
-    # def test_remove_follow_no_user(self):
-    #     self.setup_followers()
-    #     with self.client as c:
-
-    #         resp = c.post("/users/44444/unfollow", follow_redirects=True)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertEqual(resp.status_code, 200)
-    #         self.assertIn("Access unauthorized", html)
-
-    # def test_remove_follow_invalid_user(self):
-    #     self.setup_followers()
-    #     with self.client as c:
-    #         with c.session_transaction() as sess:
-    #             sess[CURR_USER_KEY] = self.testuser.id
-    #         resp = c.post("/users/999999999/unfollow", follow_redirects=True)
-    #         html = resp.get_data(as_text=True)
-    #         self.assertEqual(resp.status_code, 404)
-    #         self.assertIn("Page not found", html)
+    def test_checkout(self):
+        """
+        Test checkout aggregation route operates correctly.
+        """
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+            cart = Cart(name='test_cart', user_id = self.testuser.id)
+            db.session.add(cart)
+            db.session.commit()
+            # Add recipe with 13oz chicken breast
+            db.session.add(RecipeCart(recipe_id=4, cart_id=cart.id, quantity=1))
+            # Add recipe with 2 whole chicken breast (1 whole = 6.5ox)
+            db.session.add(RecipeCart(recipe_id=24, cart_id=cart.id, quantity=2))
+            db.session.commit()
+            resp = c.get(f"/carts/{cart.id}/checkout", follow_redirects=True)
+            html = resp.get_data(as_text=True)
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('39 ounce chicken breast', html)

@@ -131,7 +131,7 @@ class RecipeModelTestCase(TestCase):
         "difficulty":2,
         "spice_level":3})
 
-    def test_recipe_contents(self):
+    def test_recipe_query_contents(self):
         recipe = Recipe(
             title='test_title',
             category='beef',
@@ -157,6 +157,8 @@ class RecipeModelTestCase(TestCase):
 
         self.assertEqual(len(recipe.contents().all()), 1)
         self.assertEqual(recipe.contents().all(), [(Decimal(3), ingredient)])
+
+
 
 class CartModelTestCase(TestCase):
     """Test model for carts."""
@@ -192,9 +194,9 @@ class CartModelTestCase(TestCase):
         # User should have no carts
         self.assertEqual(cart.name, 'Untitled Cart')
         self.assertEqual(cart.is_complete, False)
-        self.assertEqual(len(cart.contents().all()), 0)
+        self.assertEqual(len(cart.query_contents().all()), 0)
 
-    def test_cart_contents(self):
+    def test_cart_query_contents(self):
         """Test user model signup method"""
         cart = Cart(
             user_id=self.user_id
@@ -211,6 +213,49 @@ class CartModelTestCase(TestCase):
         db.session.commit()
         db.session.add(RecipeCart(recipe_id=recipe.id, cart_id=cart.id, quantity=2))
         db.session.commit()
-        self.assertEqual(len(cart.contents().all()), 1)
-        self.assertEqual(cart.contents().all(), [(Decimal(2), recipe)])
+        self.assertEqual(len(cart.query_contents().all()), 1)
+        self.assertEqual(cart.query_contents().all(), [(Decimal(2), recipe)])
     
+    def test_cart_ingredient_quantities(self):
+        cart = Cart(user_id=self.user_id)
+        recipe1 = Recipe(
+            title='test_title1',
+            category='beef',
+            prep_time=50,
+            difficulty=2,
+            spice_level=3
+        )
+        recipe2 = Recipe(
+            title='test_title2',
+            category='beef',
+            prep_time=40,
+            difficulty=1,
+            spice_level=2
+        )
+
+        category = Category(category_label='test_grouping')
+        conversion1 = Conversion(unit_from='unit1', unit_to='unit1', food_type='General', conversion_factor=1)
+        conversion2 = Conversion(unit_from='unit2', unit_to='unit1', food_type='General', conversion_factor=5)
+        db.session.add_all([cart, recipe1, recipe2, category, conversion1, conversion2])
+        db.session.commit()
+        ingredient1 = Ingredient(food_name='test_ingredient1', 
+                                unit='unit1', 
+                                category_id = category.id, 
+                                conversion_id = conversion1.id)
+        ingredient2 = Ingredient(food_name='test_ingredient1', 
+                                unit='unit2', 
+                                category_id = category.id, 
+                                conversion_id = conversion2.id)
+        db.session.add_all([ingredient1, ingredient2])
+        db.session.commit()
+        db.session.add(RecipeIngredient(recipe_id=recipe1.id, 
+                                        ingredient_id=ingredient1.id, 
+                                        quantity=3))
+        db.session.add(RecipeIngredient(recipe_id=recipe2.id, 
+                                        ingredient_id=ingredient2.id, 
+                                        quantity=2))
+        db.session.add(RecipeCart(recipe_id=recipe1.id, cart_id=cart.id, quantity=1))
+        db.session.add(RecipeCart(recipe_id=recipe2.id, cart_id=cart.id, quantity=2))
+        db.session.commit()
+        total_ingredients = cart.query_ingredient_quantities().all()
+        self.assertEqual(total_ingredients, [('test_ingredient1', 'unit1', Decimal(23), 'test_grouping')])

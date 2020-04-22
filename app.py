@@ -44,7 +44,11 @@ def add_user_to_g():
 @app.before_request
 def add_cart_to_g():
     if CURR_CART_KEY in session:
-        g.cart = Cart.query.get_or_404(session[CURR_CART_KEY])
+        cart = Cart.query.filter_by(id=session[CURR_CART_KEY]).first()
+        if cart:
+            g.cart = cart
+        else:
+            del session[CURR_CART_KEY]
     else:
         g.cart = None
 
