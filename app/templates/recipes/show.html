@@ -14,13 +14,13 @@
             <img class="card-img-top" src="{{generate_image_url(image_path, recipe)}}" alt="Recipe Image">
             <div class="card-body">
                 <h5 class="card-title">{{recipe.title}}</h5>
-                <p class="card-text">
+                <div class="card-text">
                     {{create_protein_badge(recipe.category)}}
                     <p>Total Prep Time: {{recipe.prep_time}} mins</p>
                     <p>Difficulty: {{render_difficulty(recipe.difficulty)}}</p>
                     <p>Spice Level: {{render_spice_level(recipe.spice_level)}}</p>
                     <p>Serving Size: {{render_serving_size(recipe.servings)}}</p>
-                </p>
+                </div>
             </div>
             {{create_add_to_cart_button(recipe)}}  
         </div>

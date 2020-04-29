@@ -65,7 +65,7 @@
             <img class="card-img-top" src="{{generate_image_url(image_path, recipe)}}" alt="Recipe Image">
             <div class="card-body">
               <a href={{url_for('show_recipe', recipe_id=recipe.id)}}><h5 class="card-title text-dark">{{recipe.title}}</h5></a>
-              <p class="card-text">
+              <div class="card-text">
                 <span class="card-icon">
                   <i class="fas fa-shopping-cart 
                     {% if recipe.id in recipes_in_cart %}
@@ -85,7 +85,7 @@
                 {{create_protein_badge(recipe.category)}}
                 <p>Difficulty: {{render_difficulty(recipe.difficulty)}}</p>
                 <p>Spice Level: {{render_spice_level(recipe.spice_level)}}</p>
-              </p>
+              </div>
               <a href={{url_for('show_recipe', recipe_id=recipe.id)}} class="btn btn-block btn-outline-primary">View Recipe</a>
             </div>
             {{create_add_to_cart_button(recipe)}}

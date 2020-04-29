@@ -2,6 +2,10 @@ venv/
 __pycache__/
 .vscode/
 .DS_STORE
-static/images/
+app/static/images/
 secrets.py
 sql-queries.psql
+data/scraping/secrets.py
+data/scraping/unparseable_urls.txt
+data/scraping/urls.txt
+data/scraping/visited_urls.txt
